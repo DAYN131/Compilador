@@ -15,6 +15,117 @@ namespace Compilador
     public partial class abrir: Form
     {
 
+        // Añade este método para colorear los tokens
+        private void ColorizeTokens(List<Token> tokens)
+        {
+            // Guardar posición actual del cursor
+            int originalPosition = codigo.SelectionStart;
+
+            // Limpiar formatos previos
+            codigo.SelectAll();
+            codigo.SelectionColor = Color.White; // Color por defecto
+            codigo.DeselectAll();
+
+            foreach (Token token in tokens)
+            {
+                int startPos = GetPositionInTextBox(token.Line, token.Position);
+                int length = token.Lexeme.Length;
+
+                // Seleccionar el texto del token
+                codigo.Select(startPos, length);
+
+                // Asignar color según tipo de token
+                switch (token.Type)
+                {
+                    case TokenType.Var:
+                    case TokenType.Val:
+                    case TokenType.Fun:
+                    case TokenType.For:
+                    case TokenType.While:
+                    case TokenType.Print:
+                    case TokenType.Println:
+                        codigo.SelectionColor = Color.DodgerBlue;
+                        break;
+
+                    case TokenType.TypeInt:
+                    case TokenType.TypeStr:
+                    case TokenType.TypeBool:
+                        codigo.SelectionColor = Color.LightSkyBlue;
+                        break;
+
+                    case TokenType.Number:
+                        codigo.SelectionColor = Color.White;
+                        break;
+
+                    case TokenType.String:
+                        codigo.SelectionColor = Color.LimeGreen;
+                        break;
+
+                    case TokenType.CommentLine:
+                    case TokenType.CommentBlock:
+                        codigo.SelectionColor = Color.Gray;
+                        break;
+
+                    case TokenType.Plus:
+                    case TokenType.Minus:
+                    case TokenType.Multiply:
+                    case TokenType.Divide:
+                    case TokenType.Assign:
+                        codigo.SelectionColor = Color.Gold;
+                        break;
+
+                    case TokenType.Identifier:
+                        codigo.SelectionColor = Color.Cyan;
+                        break;
+
+                    case TokenType.LParen:
+                    case TokenType.RParen:
+                    case TokenType.LBrace:
+                    case TokenType.RBrace:
+                    case TokenType.Comma:
+                    case TokenType.Semicolon:
+                        codigo.SelectionColor = Color.Magenta;
+                        break;
+
+                    case TokenType.EOF:
+                        codigo.SelectionColor = Color.White;
+                        break;
+
+                    default:
+                        codigo.SelectionColor = Color.White;
+                        break;
+                }
+            }
+
+            // Restaurar posición original
+            codigo.SelectionStart = originalPosition;
+            codigo.SelectionLength = 0;
+        }
+
+        // Método auxiliar para convertir posición (línea, columna) a posición en TextBox
+        private int GetPositionInTextBox(int line, int column)
+        {
+            int position = 0;
+            int currentLine = 1;
+            int currentColumn = 1;
+
+            while (currentLine < line && position < codigo.Text.Length)
+            {
+                if (codigo.Text[position] == '\n')
+                {
+                    currentLine++;
+                    currentColumn = 1;
+                }
+                else
+                {
+                    currentColumn++;
+                }
+                position++;
+            }
+
+            return position + (column - 1);
+        }
+
 
         public abrir(string contenido, string rutaArchivo)
         {
@@ -124,6 +235,10 @@ namespace Compilador
                 {
                     listBoxTokens.Items.Add(token.ToString());
                 }
+
+                // Aplicar colores al código fuente
+                ColorizeTokens(tokens);
+                MessageBox.Show("Tokenización completada con colores aplicados");
 
                 MessageBox.Show($"Tokenización completada. Se encontraron {tokens.Count} tokens.");
             }

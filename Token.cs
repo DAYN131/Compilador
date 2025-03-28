@@ -6,6 +6,16 @@ using System.Threading.Tasks;
 
 namespace Compilador
 {
+
+
+    // Clase Token, aqui hacemos una clase formalamente de lo que es un token
+    // el cual icluira:
+
+    // Tipo-> Tipo de Token al que pertenece
+    // Lexema -> Texto literal del codigo fuente
+    // Line - > Linea de texto en la que esta
+    // Posicion - > Posicion en la linea, es como el numero del caracter
+
     public class Token
     {
         public TokenType Type { get; }
