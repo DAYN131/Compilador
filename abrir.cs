@@ -230,10 +230,15 @@ namespace Compilador
                 List<Token> tokens = tokenizer.Tokenize();
 
                 // Mostrar los tokens en un ListBox o similar
-                listBoxTokens.Items.Clear();
+                tokentipebox.Items.Clear();
+                tokenbox.Items.Clear();
+                posicion.Items.Clear();
                 foreach (Token token in tokens)
                 {
-                    listBoxTokens.Items.Add(token.ToString());
+                    string[] partes = token.ToString().Split(' ');
+                    tokentipebox.Items.Add(partes[0]);
+                    tokenbox.Items.Add(partes[1]);
+                    posicion.Items.Add(partes[2] + " " + partes[3] + " " + partes[4] + " "+ partes[5]);
                 }
 
                 // Aplicar colores al código fuente
@@ -247,5 +252,7 @@ namespace Compilador
                 MessageBox.Show($"Error durante la tokenización: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
     }
 }

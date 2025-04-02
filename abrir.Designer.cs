@@ -41,7 +41,9 @@
             this.detenerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label1 = new System.Windows.Forms.Label();
             this.btnTokenize = new System.Windows.Forms.Button();
-            this.listBoxTokens = new System.Windows.Forms.ListBox();
+            this.tokentipebox = new System.Windows.Forms.ListBox();
+            this.tokenbox = new System.Windows.Forms.ListBox();
+            this.posicion = new System.Windows.Forms.ListBox();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -51,7 +53,7 @@
             this.codigo.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.codigo.ForeColor = System.Drawing.SystemColors.Menu;
             this.codigo.Location = new System.Drawing.Point(4, 62);
-            this.codigo.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.codigo.Margin = new System.Windows.Forms.Padding(4);
             this.codigo.Name = "codigo";
             this.codigo.Size = new System.Drawing.Size(755, 474);
             this.codigo.TabIndex = 2;
@@ -67,7 +69,7 @@
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.menuStrip1.Size = new System.Drawing.Size(1067, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1061, 28);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -79,14 +81,14 @@
             this.guardarToolStripMenuItem3,
             this.guardarToolStripMenuItem4});
             this.guardarToolStripMenuItem.Name = "guardarToolStripMenuItem";
-            this.guardarToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+            this.guardarToolStripMenuItem.Size = new System.Drawing.Size(73, 24);
             this.guardarToolStripMenuItem.Text = "Archivo";
             // 
             // guardarToolStripMenuItem1
             // 
             this.guardarToolStripMenuItem1.Image = ((System.Drawing.Image)(resources.GetObject("guardarToolStripMenuItem1.Image")));
             this.guardarToolStripMenuItem1.Name = "guardarToolStripMenuItem1";
-            this.guardarToolStripMenuItem1.Size = new System.Drawing.Size(156, 26);
+            this.guardarToolStripMenuItem1.Size = new System.Drawing.Size(189, 26);
             this.guardarToolStripMenuItem1.Text = "Abrir";
             this.guardarToolStripMenuItem1.Click += new System.EventHandler(this.guardarToolStripMenuItem1_Click_1);
             // 
@@ -94,7 +96,7 @@
             // 
             this.guardarToolStripMenuItem2.Image = ((System.Drawing.Image)(resources.GetObject("guardarToolStripMenuItem2.Image")));
             this.guardarToolStripMenuItem2.Name = "guardarToolStripMenuItem2";
-            this.guardarToolStripMenuItem2.Size = new System.Drawing.Size(156, 26);
+            this.guardarToolStripMenuItem2.Size = new System.Drawing.Size(189, 26);
             this.guardarToolStripMenuItem2.Text = "Crear Nuevo";
             this.guardarToolStripMenuItem2.Click += new System.EventHandler(this.guardarToolStripMenuItem2_Click_1);
             // 
@@ -102,7 +104,7 @@
             // 
             this.guardarToolStripMenuItem3.Image = ((System.Drawing.Image)(resources.GetObject("guardarToolStripMenuItem3.Image")));
             this.guardarToolStripMenuItem3.Name = "guardarToolStripMenuItem3";
-            this.guardarToolStripMenuItem3.Size = new System.Drawing.Size(156, 26);
+            this.guardarToolStripMenuItem3.Size = new System.Drawing.Size(189, 26);
             this.guardarToolStripMenuItem3.Text = "Guardar Como";
             this.guardarToolStripMenuItem3.Click += new System.EventHandler(this.guardarToolStripMenuItem3_Click_1);
             // 
@@ -110,7 +112,7 @@
             // 
             this.guardarToolStripMenuItem4.Image = ((System.Drawing.Image)(resources.GetObject("guardarToolStripMenuItem4.Image")));
             this.guardarToolStripMenuItem4.Name = "guardarToolStripMenuItem4";
-            this.guardarToolStripMenuItem4.Size = new System.Drawing.Size(156, 26);
+            this.guardarToolStripMenuItem4.Size = new System.Drawing.Size(189, 26);
             this.guardarToolStripMenuItem4.Text = "Guardar";
             this.guardarToolStripMenuItem4.Click += new System.EventHandler(this.guardarToolStripMenuItem4_Click);
             // 
@@ -120,21 +122,21 @@
             this.compilarToolStripMenuItem1,
             this.detenerToolStripMenuItem});
             this.compilarToolStripMenuItem.Name = "compilarToolStripMenuItem";
-            this.compilarToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
+            this.compilarToolStripMenuItem.Size = new System.Drawing.Size(84, 24);
             this.compilarToolStripMenuItem.Text = "Compilar";
             // 
             // compilarToolStripMenuItem1
             // 
             this.compilarToolStripMenuItem1.Image = ((System.Drawing.Image)(resources.GetObject("compilarToolStripMenuItem1.Image")));
             this.compilarToolStripMenuItem1.Name = "compilarToolStripMenuItem1";
-            this.compilarToolStripMenuItem1.Size = new System.Drawing.Size(127, 26);
+            this.compilarToolStripMenuItem1.Size = new System.Drawing.Size(153, 26);
             this.compilarToolStripMenuItem1.Text = "Compilar";
             // 
             // detenerToolStripMenuItem
             // 
             this.detenerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("detenerToolStripMenuItem.Image")));
             this.detenerToolStripMenuItem.Name = "detenerToolStripMenuItem";
-            this.detenerToolStripMenuItem.Size = new System.Drawing.Size(127, 26);
+            this.detenerToolStripMenuItem.Size = new System.Drawing.Size(153, 26);
             this.detenerToolStripMenuItem.Text = "Detener";
             // 
             // label1
@@ -148,7 +150,7 @@
             // btnTokenize
             // 
             this.btnTokenize.Location = new System.Drawing.Point(208, 0);
-            this.btnTokenize.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnTokenize.Margin = new System.Windows.Forms.Padding(4);
             this.btnTokenize.Name = "btnTokenize";
             this.btnTokenize.Size = new System.Drawing.Size(100, 28);
             this.btnTokenize.TabIndex = 5;
@@ -156,30 +158,54 @@
             this.btnTokenize.UseVisualStyleBackColor = true;
             this.btnTokenize.Click += new System.EventHandler(this.btnTokenize_Click);
             // 
-            // listBoxTokens
+            // tokentipebox
             // 
-            this.listBoxTokens.FormattingEnabled = true;
-            this.listBoxTokens.ItemHeight = 16;
-            this.listBoxTokens.Location = new System.Drawing.Point(767, 63);
-            this.listBoxTokens.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.listBoxTokens.Name = "listBoxTokens";
-            this.listBoxTokens.Size = new System.Drawing.Size(299, 468);
-            this.listBoxTokens.TabIndex = 6;
+            this.tokentipebox.FormattingEnabled = true;
+            this.tokentipebox.ItemHeight = 16;
+            this.tokentipebox.Location = new System.Drawing.Point(767, 63);
+            this.tokentipebox.Margin = new System.Windows.Forms.Padding(4);
+            this.tokentipebox.Name = "tokentipebox";
+            this.tokentipebox.Size = new System.Drawing.Size(98, 468);
+            this.tokentipebox.TabIndex = 6;
+            // 
+            // tokenbox
+            // 
+            this.tokenbox.FormattingEnabled = true;
+            this.tokenbox.ItemHeight = 16;
+            this.tokenbox.Location = new System.Drawing.Point(868, 63);
+            this.tokenbox.Margin = new System.Windows.Forms.Padding(4);
+            this.tokenbox.Name = "tokenbox";
+            this.tokenbox.Size = new System.Drawing.Size(98, 468);
+            this.tokenbox.TabIndex = 7;
+            // 
+            // posicion
+            // 
+            this.posicion.FormattingEnabled = true;
+            this.posicion.ItemHeight = 16;
+            this.posicion.Location = new System.Drawing.Point(969, 63);
+            this.posicion.Margin = new System.Windows.Forms.Padding(4);
+            this.posicion.Name = "posicion";
+            this.posicion.Size = new System.Drawing.Size(165, 468);
+            this.posicion.TabIndex = 8;
             // 
             // abrir
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ClientSize = new System.Drawing.Size(1067, 554);
-            this.Controls.Add(this.listBoxTokens);
+            this.ClientSize = new System.Drawing.Size(1061, 554);
+            this.Controls.Add(this.posicion);
+            this.Controls.Add(this.tokenbox);
+            this.Controls.Add(this.tokentipebox);
             this.Controls.Add(this.btnTokenize);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.codigo);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "abrir";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "abrir";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -202,6 +228,8 @@
         private System.Windows.Forms.ToolStripMenuItem detenerToolStripMenuItem;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnTokenize;
-        private System.Windows.Forms.ListBox listBoxTokens;
+        private System.Windows.Forms.ListBox tokentipebox;
+        private System.Windows.Forms.ListBox tokenbox;
+        private System.Windows.Forms.ListBox posicion;
     }
 }
