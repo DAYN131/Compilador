@@ -40,10 +40,11 @@
             this.compilarToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.detenerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnTokenize = new System.Windows.Forms.Button();
             this.tokentipebox = new System.Windows.Forms.ListBox();
             this.tokenbox = new System.Windows.Forms.ListBox();
             this.posicion = new System.Windows.Forms.ListBox();
+            this.tokenizarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.parserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,11 +66,13 @@
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.guardarToolStripMenuItem,
-            this.compilarToolStripMenuItem});
+            this.compilarToolStripMenuItem,
+            this.tokenizarToolStripMenuItem,
+            this.parserToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.menuStrip1.Size = new System.Drawing.Size(1061, 28);
+            this.menuStrip1.Size = new System.Drawing.Size(764, 28);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -147,17 +150,6 @@
             this.label1.Size = new System.Drawing.Size(0, 16);
             this.label1.TabIndex = 4;
             // 
-            // btnTokenize
-            // 
-            this.btnTokenize.Location = new System.Drawing.Point(208, 0);
-            this.btnTokenize.Margin = new System.Windows.Forms.Padding(4);
-            this.btnTokenize.Name = "btnTokenize";
-            this.btnTokenize.Size = new System.Drawing.Size(100, 28);
-            this.btnTokenize.TabIndex = 5;
-            this.btnTokenize.Text = "Tokenizar";
-            this.btnTokenize.UseVisualStyleBackColor = true;
-            this.btnTokenize.Click += new System.EventHandler(this.btnTokenize_Click);
-            // 
             // tokentipebox
             // 
             this.tokentipebox.FormattingEnabled = true;
@@ -167,6 +159,7 @@
             this.tokentipebox.Name = "tokentipebox";
             this.tokentipebox.Size = new System.Drawing.Size(98, 468);
             this.tokentipebox.TabIndex = 6;
+            this.tokentipebox.Visible = false;
             // 
             // tokenbox
             // 
@@ -177,6 +170,7 @@
             this.tokenbox.Name = "tokenbox";
             this.tokenbox.Size = new System.Drawing.Size(98, 468);
             this.tokenbox.TabIndex = 7;
+            this.tokenbox.Visible = false;
             // 
             // posicion
             // 
@@ -185,8 +179,23 @@
             this.posicion.Location = new System.Drawing.Point(969, 63);
             this.posicion.Margin = new System.Windows.Forms.Padding(4);
             this.posicion.Name = "posicion";
-            this.posicion.Size = new System.Drawing.Size(165, 468);
+            this.posicion.Size = new System.Drawing.Size(220, 468);
             this.posicion.TabIndex = 8;
+            this.posicion.Visible = false;
+            // 
+            // tokenizarToolStripMenuItem
+            // 
+            this.tokenizarToolStripMenuItem.Name = "tokenizarToolStripMenuItem";
+            this.tokenizarToolStripMenuItem.Size = new System.Drawing.Size(86, 24);
+            this.tokenizarToolStripMenuItem.Text = "Tokenizar";
+            this.tokenizarToolStripMenuItem.Click += new System.EventHandler(this.tokenizarToolStripMenuItem_Click);
+            // 
+            // parserToolStripMenuItem
+            // 
+            this.parserToolStripMenuItem.Name = "parserToolStripMenuItem";
+            this.parserToolStripMenuItem.Size = new System.Drawing.Size(62, 24);
+            this.parserToolStripMenuItem.Text = "Parser";
+            this.parserToolStripMenuItem.Click += new System.EventHandler(this.parserToolStripMenuItem_Click);
             // 
             // abrir
             // 
@@ -194,11 +203,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ClientSize = new System.Drawing.Size(1061, 554);
+            this.ClientSize = new System.Drawing.Size(764, 554);
             this.Controls.Add(this.posicion);
             this.Controls.Add(this.tokenbox);
             this.Controls.Add(this.tokentipebox);
-            this.Controls.Add(this.btnTokenize);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.codigo);
             this.Controls.Add(this.menuStrip1);
@@ -227,9 +235,10 @@
         private System.Windows.Forms.ToolStripMenuItem compilarToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem detenerToolStripMenuItem;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnTokenize;
         private System.Windows.Forms.ListBox tokentipebox;
         private System.Windows.Forms.ListBox tokenbox;
         private System.Windows.Forms.ListBox posicion;
+        private System.Windows.Forms.ToolStripMenuItem tokenizarToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem parserToolStripMenuItem;
     }
 }

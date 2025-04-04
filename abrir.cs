@@ -222,12 +222,18 @@ namespace Compilador
             }
         }
 
-        private void btnTokenize_Click(object sender, EventArgs e)
+
+        private void tokenizarToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 Tokenizer tokenizer = new Tokenizer(codigo.Text);
                 List<Token> tokens = tokenizer.Tokenize();
+
+                tokentipebox.Visible = true;
+                tokenbox.Visible = true;
+                posicion.Visible = true;
+
 
                 // Mostrar los tokens en un ListBox o similar
                 tokentipebox.Items.Clear();
@@ -238,7 +244,7 @@ namespace Compilador
                     string[] partes = token.ToString().Split(' ');
                     tokentipebox.Items.Add(partes[0]);
                     tokenbox.Items.Add(partes[1]);
-                    posicion.Items.Add(partes[2] + " " + partes[3] + " " + partes[4] + " "+ partes[5]);
+                    posicion.Items.Add(partes[2] + " " + partes[3] + " " + partes[4] + " " + partes[5]);
                 }
 
                 // Aplicar colores al código fuente
@@ -253,6 +259,27 @@ namespace Compilador
             }
         }
 
+        private void parserToolStripMenuItem_Click(object sender, EventArgs e)
+        {
 
+            try
+            {
+                // Tokenizar el texto desde la RichTextBox
+                Tokenizer tokenizer = new Tokenizer(codigo.Text);
+                List<Token> tokens = tokenizer.Tokenize();
+
+                // Ejecutar el parser con los tokens
+                Parser parser = new Parser(tokens);
+                parser.Parse(); // Aquí se hará todo el análisis sintáctico
+
+                // Si no lanza excepción, está bien
+                MessageBox.Show("✅ Análisis sintáctico completado correctamente.", "Parser", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Error durante el análisis sintáctico:\n{ex.Message}", "Error de Parser", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
     }
 }

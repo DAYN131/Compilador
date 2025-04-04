@@ -42,7 +42,9 @@ namespace Compilador
         //CommentBlock: Comentarios multilínea (-! comentario !-)
         CommentLine, CommentBlock,
 
+        Import,
         // EOF (End Of File): Marca el final del archivo
+        Return,
         EOF
     }
 }
