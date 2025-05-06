@@ -9,6 +9,10 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
+using Compilador.Generated;
+
 
 namespace Compilador
 {
@@ -105,25 +109,26 @@ namespace Compilador
         // Método auxiliar para convertir posición (línea, columna) a posición en TextBox
         private int GetPositionInTextBox(int line, int column)
         {
-            int position = 0;
-            int currentLine = 1;
-            int currentColumn = 1;
+            // Asegurarse que las líneas y columnas no sean negativas
+            line = Math.Max(1, line);
+            column = Math.Max(0, column); // ANTLR usa columnas base 0
 
-            while (currentLine < line && position < codigo.Text.Length)
+            string[] lines = codigo.Text.Split('\n');
+            int position = 0;
+
+            // Sumar las longitudes de las líneas anteriores
+            for (int i = 0; i < line - 1 && i < lines.Length; i++)
             {
-                if (codigo.Text[position] == '\n')
-                {
-                    currentLine++;
-                    currentColumn = 1;
-                }
-                else
-                {
-                    currentColumn++;
-                }
-                position++;
+                position += lines[i].Length + 1; // +1 por el carácter \n
             }
 
-            return position + (column - 1);
+            // Asegurar que la columna no exceda la longitud de la línea
+            if (line - 1 < lines.Length)
+            {
+                column = Math.Min(column, lines[line - 1].Length);
+            }
+
+            return position + column;
         }
 
 
@@ -222,41 +227,125 @@ namespace Compilador
             }
         }
 
+        // USO DE ANTLR
+        private SiriusLanguageParser SetupAntlrParser()
+        {
+            var inputStream = new AntlrInputStream(codigo.Text);
+            var lexer = new SiriusLanguageLexer(inputStream);
+            var tokenStream = new CommonTokenStream(lexer);
+            return new SiriusLanguageParser(tokenStream);
+        }
+
+
 
         private void tokenizarToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                Tokenizer tokenizer = new Tokenizer(codigo.Text);
-                List<Token> tokens = tokenizer.Tokenize();
+                var parser = SetupAntlrParser();
+                var tokenStream = (CommonTokenStream)parser.InputStream;
+                tokenStream.Fill();
 
-                tokentipebox.Visible = true;
-                tokenbox.Visible = true;
-                posicion.Visible = true;
-
-
-                // Mostrar los tokens en un ListBox o similar
+                // Configurar visualización de tokens
                 tokentipebox.Items.Clear();
                 tokenbox.Items.Clear();
                 posicion.Items.Clear();
-                foreach (Token token in tokens)
+
+                foreach (var token in tokenStream.GetTokens())
                 {
-                    string[] partes = token.ToString().Split(' ');
-                    tokentipebox.Items.Add(partes[0]);
-                    tokenbox.Items.Add(partes[1]);
-                    posicion.Items.Add(partes[2] + " " + partes[3] + " " + partes[4] + " " + partes[5]);
+                    if (token.Type == -1) continue; // Omitir EOF
+
+                    var tokenName = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type);
+                    tokentipebox.Items.Add(tokenName);
+                    tokenbox.Items.Add(token.Text);
+                    posicion.Items.Add($"Línea {token.Line}:{token.Column}");
                 }
 
-                // Aplicar colores al código fuente
-                ColorizeTokens(tokens);
-                MessageBox.Show("Tokenización completada con colores aplicados");
-
-                MessageBox.Show($"Tokenización completada. Se encontraron {tokens.Count} tokens.");
+                ColorizeTokensAntlr(tokenStream.GetTokens());
+                MessageBox.Show("Tokenización con ANTLR completada");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error durante la tokenización: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void ColorizeTokensAntlr(IList<IToken> tokens)
+        {
+            int originalPos = codigo.SelectionStart;
+            codigo.SelectAll();
+            codigo.SelectionColor = Color.White; // Color por defecto
+            codigo.DeselectAll();
+
+            foreach (var token in tokens)
+            {
+                if (token.Type == -1) continue; // Omitir EOF
+
+                int start = GetPositionInTextBox(token.Line, token.Column);
+                int length = token.StopIndex - token.StartIndex + 1;
+
+                // Validar que la selección esté dentro de los límites
+                if (start >= 0 && start + length <= codigo.Text.Length)
+                {
+                    codigo.Select(start, length);
+
+                    // Mapeo completo de tokens a colores
+                    var tokenType = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type);
+                    switch (tokenType)
+                    {
+                        case "VAR":
+                        case "VAL":
+                            codigo.SelectionColor = Color.DodgerBlue;
+                            break;
+                        case "FUN":
+                        case "FOR":
+                        case "WHILE":
+                        case "IF":
+                        case "ELSE":
+                            codigo.SelectionColor = Color.Blue;
+                            break;
+                        case "PRINT":
+                        case "PRINTLN":
+                            codigo.SelectionColor = Color.Cyan;
+                            break;
+                        case "NUMBER":
+                            codigo.SelectionColor = Color.LightGreen;
+                            break;
+                        case "STRING":
+                            codigo.SelectionColor = Color.Orange;
+                            break;
+                        case "TYPE_INT":
+                        case "TYPE_STR":
+                        case "TYPE_BOOL":
+                            codigo.SelectionColor = Color.LightSkyBlue;
+                            break;
+                        case "PLUS":
+                        case "MINUS":
+                        case "MULTIPLY":
+                        case "DIVIDE":
+                            codigo.SelectionColor = Color.Gold;
+                            break;
+                        case "LPAREN":
+                        case "RPAREN":
+                        case "LBRACE":
+                        case "RBRACE":
+                        case "SEMICOLON":
+                        case "COMMA":
+                            codigo.SelectionColor = Color.Magenta;
+                            break;
+                        case "COMMENT_LINE":
+                        case "COMMENT_BLOCK":
+                            codigo.SelectionColor = Color.Gray;
+                            break;
+                        default:
+                            codigo.SelectionColor = Color.White;
+                            break;
+                    }
+                }
+            }
+
+            codigo.SelectionStart = originalPos;
+            codigo.SelectionLength = 0;
         }
 
         private void parserToolStripMenuItem_Click(object sender, EventArgs e)
@@ -264,22 +353,36 @@ namespace Compilador
 
             try
             {
-                // Tokenizar el texto desde la RichTextBox
-                Tokenizer tokenizer = new Tokenizer(codigo.Text);
-                List<Token> tokens = tokenizer.Tokenize();
+                var parser = SetupAntlrParser();
+                parser.RemoveErrorListeners();
+                parser.AddErrorListener(new AntlrErrorListener());
 
-                // Ejecutar el parser con los tokens
-                Parser parser = new Parser(tokens);
-                parser.Parse(); // Aquí se hará todo el análisis sintáctico
+                var tree = parser.program(); // Usa la regla inicial de tu gramática
 
-                // Si no lanza excepción, está bien
-                MessageBox.Show("✅ Análisis sintáctico completado correctamente.", "Parser", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Análisis sintáctico exitoso!\n" +
+                              $"Árbol: {tree.ToStringTree(parser)}",
+                              "Parser ANTLR", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Error durante el análisis sintáctico:\n{ex.Message}", "Error de Parser", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error de sintaxis:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
+
+        // Clase para manejo de errores
+        public class AntlrErrorListener : BaseErrorListener
+        {
+            public override void SyntaxError(TextWriter output, IRecognizer recognizer,
+                IToken offendingSymbol, int line, int charPositionInLine,
+                string msg, RecognitionException e)
+            {
+                // Cambia el parámetro 'output' a '_output' si es necesario
+                throw new Exception($"Error en línea {line}, posición {charPositionInLine}: {msg}");
+            }
+        }
+
+
+
+       
     }
 }
