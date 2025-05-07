@@ -269,26 +269,26 @@ namespace Compilador
             }
         }
 
-        private void ArbolBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var parser = SetupAntlrParser();
-                var tree = parser.program();
+        //private void ArbolBtn_Click(object sender, EventArgs e)
+        //{
+        //    try
+        //    {
+        //        var parser = SetupAntlrParser();
+        //        var tree = parser.program();
 
-                treeView1.BeginUpdate();
-                treeView1.Nodes.Clear();
-                BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
-                treeView1.ExpandAll();
-                treeView1.EndUpdate();
+        //        treeView1.BeginUpdate();
+        //        treeView1.Nodes.Clear();
+        //        BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
+        //        treeView1.ExpandAll();
+        //        treeView1.EndUpdate();
 
               
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
 
         private void BuildTreeView(IParseTree tree, TreeNode parentNode)
         {
@@ -326,35 +326,6 @@ namespace Compilador
 
         #endregion
 
-
-        // Analizador Semántico
-        private void semanticBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var parser = SetupAntlrParser();
-                var tree = parser.program();
-
-                var walker = new ParseTreeWalker();
-                var analyzer = new SemanticAnalyzer();
-                walker.Walk(analyzer, tree);
-
-                // Validar después de recorrer todo el árbol
-                analyzer.ValidateSemantics();
-
-                MessageBox.Show("✔ Análisis semántico completado sin errores",
-                              "Éxito",
-                              MessageBoxButtons.OK,
-                              MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"❌ Errores semánticos encontrados:\n{ex.Message}",
-                               "Error",
-                               MessageBoxButtons.OK,
-                               MessageBoxIcon.Error);
-            }
-        }
 
         public class SemanticAnalyzer : SiriusLanguageBaseListener
         {
@@ -470,6 +441,56 @@ namespace Compilador
                 }
             }
         }
+
+        private void arbolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
+
+                treeView1.BeginUpdate();
+                treeView1.Nodes.Clear();
+                BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
+                treeView1.ExpandAll();
+                treeView1.EndUpdate();
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void semanticoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
+
+                var walker = new ParseTreeWalker();
+                var analyzer = new SemanticAnalyzer();
+                walker.Walk(analyzer, tree);
+
+                // Validar después de recorrer todo el árbol
+                analyzer.ValidateSemantics();
+
+                MessageBox.Show("✔ Análisis semántico completado sin errores",
+                              "Éxito",
+                              MessageBoxButtons.OK,
+                              MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Errores semánticos encontrados:\n{ex.Message}",
+                               "Error",
+                               MessageBoxButtons.OK,
+                               MessageBoxIcon.Error);
+            }
+        }
+
 
     }
 }

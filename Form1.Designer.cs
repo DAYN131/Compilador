@@ -41,7 +41,8 @@
             // 
             this.Abrir.BackColor = System.Drawing.Color.DarkOrange;
             this.Abrir.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.Abrir.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.Abrir.FlatAppearance.BorderSize = 0;
+            this.Abrir.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Abrir.Location = new System.Drawing.Point(510, 144);
             this.Abrir.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Abrir.Name = "Abrir";
@@ -56,7 +57,7 @@
             this.Crear.BackColor = System.Drawing.Color.DarkOrange;
             this.Crear.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.Crear.FlatAppearance.BorderSize = 0;
-            this.Crear.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.Crear.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Crear.Location = new System.Drawing.Point(510, 208);
             this.Crear.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Crear.Name = "Crear";
@@ -81,19 +82,21 @@
             // label2
             // 
             this.label2.AutoSize = true;
+            this.label2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(55, 144);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(400, 116);
             this.label2.TabIndex = 3;
-            this.label2.Text = "Mauricio Dario Sandoval Mandujano\r\n22590358\r\nDaniel Martinez Hernandez\r\n22590336";
+            this.label2.Text = "Daniel Martinez Hernandez\r\n22590336\r\nMauricio Dario Sandoval Mandujano\r\n22590358\r" +
+    "\n";
             // 
             // pictureBox1
             // 
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
             this.pictureBox1.Location = new System.Drawing.Point(340, 50);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(69, 69);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -105,7 +108,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(805, 447);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
