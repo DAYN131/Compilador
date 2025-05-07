@@ -1,5 +1,7 @@
 grammar SiriusLanguage;
 
+
+
 // Parser rules
 program: (declaration | statement)* EOF;
 

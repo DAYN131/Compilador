@@ -12,232 +12,103 @@ using System.Windows.Forms;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Compilador.Generated;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 
 namespace Compilador
 {
-    public partial class abrir: Form
+    public partial class abrir : Form
     {
-
-        // Añade este método para colorear los tokens
-        private void ColorizeTokens(List<Token> tokens)
-        {
-            // Guardar posición actual del cursor
-            int originalPosition = codigo.SelectionStart;
-
-            // Limpiar formatos previos
-            codigo.SelectAll();
-            codigo.SelectionColor = Color.White; // Color por defecto
-            codigo.DeselectAll();
-
-            foreach (Token token in tokens)
-            {
-                int startPos = GetPositionInTextBox(token.Line, token.Position);
-                int length = token.Lexeme.Length;
-
-                // Seleccionar el texto del token
-                codigo.Select(startPos, length);
-
-                // Asignar color según tipo de token
-                switch (token.Type)
-                {
-                    case TokenType.Var:
-                    case TokenType.Val:
-                    case TokenType.Fun:
-                    case TokenType.For:
-                    case TokenType.While:
-                    case TokenType.Print:
-                    case TokenType.Println:
-                        codigo.SelectionColor = Color.DodgerBlue;
-                        break;
-
-                    case TokenType.TypeInt:
-                    case TokenType.TypeStr:
-                    case TokenType.TypeBool:
-                        codigo.SelectionColor = Color.LightSkyBlue;
-                        break;
-
-                    case TokenType.Number:
-                        codigo.SelectionColor = Color.White;
-                        break;
-
-                    case TokenType.String:
-                        codigo.SelectionColor = Color.LimeGreen;
-                        break;
-
-                    case TokenType.CommentLine:
-                    case TokenType.CommentBlock:
-                        codigo.SelectionColor = Color.Gray;
-                        break;
-
-                    case TokenType.Plus:
-                    case TokenType.Minus:
-                    case TokenType.Multiply:
-                    case TokenType.Divide:
-                    case TokenType.Assign:
-                        codigo.SelectionColor = Color.Gold;
-                        break;
-
-                    case TokenType.Identifier:
-                        codigo.SelectionColor = Color.Cyan;
-                        break;
-
-                    case TokenType.LParen:
-                    case TokenType.RParen:
-                    case TokenType.LBrace:
-                    case TokenType.RBrace:
-                    case TokenType.Comma:
-                    case TokenType.Semicolon:
-                        codigo.SelectionColor = Color.Magenta;
-                        break;
-
-                    case TokenType.EOF:
-                        codigo.SelectionColor = Color.White;
-                        break;
-
-                    default:
-                        codigo.SelectionColor = Color.White;
-                        break;
-                }
-            }
-
-            // Restaurar posición original
-            codigo.SelectionStart = originalPosition;
-            codigo.SelectionLength = 0;
-        }
-
-        // Método auxiliar para convertir posición (línea, columna) a posición en TextBox
-        private int GetPositionInTextBox(int line, int column)
-        {
-            // Asegurarse que las líneas y columnas no sean negativas
-            line = Math.Max(1, line);
-            column = Math.Max(0, column); // ANTLR usa columnas base 0
-
-            string[] lines = codigo.Text.Split('\n');
-            int position = 0;
-
-            // Sumar las longitudes de las líneas anteriores
-            for (int i = 0; i < line - 1 && i < lines.Length; i++)
-            {
-                position += lines[i].Length + 1; // +1 por el carácter \n
-            }
-
-            // Asegurar que la columna no exceda la longitud de la línea
-            if (line - 1 < lines.Length)
-            {
-                column = Math.Min(column, lines[line - 1].Length);
-            }
-
-            return position + column;
-        }
-
-
+        // Constructor y manejo de archivos
         public abrir(string contenido, string rutaArchivo)
         {
-            {
-                InitializeComponent();
-                label1.Text = rutaArchivo;
+  
+            InitializeComponent();
+            label1.Text = rutaArchivo;
+            codigo.Text = contenido ?? "";
 
-                if (contenido != null)
-                    codigo.Text = contenido; // Asumiendo que tienes un TextBox llamado txtContenido
-                else{
-                codigo.Text = "";
-                }
+       
 
-
-            }
-
+            // Ajusta el tamaño del formulario
+            this.WindowState = FormWindowState.Maximized;
+            this.MinimumSize = new Size(900, 600);
         }
 
-     
+
+
+        #region Manejo de Archivos
         private void guardarToolStripMenuItem1_Click_1(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Title = "Seleccionar Archivo",
                 Filter = "Archivos SIR (*.sir)|*.sir",
                 Multiselect = false
             };
 
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            if (openFileDialog.ShowDialog() == DialogResult.OK && openFileDialog.FileName.EndsWith(".sir"))
             {
-                string rutaArchivo = openFileDialog.FileName;
-                if (rutaArchivo.EndsWith(".sir"))
+                string contenido = File.ReadAllText(openFileDialog.FileName);
+                var f1 = new abrir(contenido, openFileDialog.FileName)
                 {
-                    string contenido;
-                    using (StreamReader reader = new StreamReader(rutaArchivo))
-                    {
-                        contenido = reader.ReadToEnd();
-                    }
-
-                    abrir f1 = new abrir(contenido, rutaArchivo);
-                    f1.Visible = true;
-                    this.Visible = false;
-                    f1.Text = rutaArchivo;
-
-                }
-                else
-                {
-                    MessageBox.Show("El archivo seleccionado no es un archivo .sir", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    Visible = true,
+                    Text = openFileDialog.FileName
+                };
+                this.Visible = false;
+            }
+            else
+            {
+                MessageBox.Show("El archivo seleccionado no es un archivo .sir", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void guardarToolStripMenuItem2_Click_1(object sender, EventArgs e)
         {
-
-            string contenido = "";
-            string rutaArchivo = "Nuevo archivo";
-            abrir f1 = new abrir(contenido, rutaArchivo);
-            f1.Text = rutaArchivo;
-            f1.Visible = true;
+            var f1 = new abrir("", "Nuevo archivo")
+            {
+                Visible = true,
+                Text = "Nuevo archivo"
+            };
             this.Visible = false;
-
-
         }
 
         private void guardarToolStripMenuItem3_Click_1(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
             {
                 Title = "Guardar Archivo",
                 Filter = "Todos los archivos (*.sir*)|*.sir*",
                 DefaultExt = "sir",
                 AddExtension = true,
             };
+
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                string rutaArchivo = saveFileDialog.FileName;
-                using (StreamWriter writer = new StreamWriter(rutaArchivo))
-                {
-                    writer.WriteLine(codigo.Text);
-                    label1.Text = rutaArchivo;
-                    this.Text = rutaArchivo;
-
-                }
+                File.WriteAllText(saveFileDialog.FileName, codigo.Text);
+                label1.Text = saveFileDialog.FileName;
+                this.Text = saveFileDialog.FileName;
             }
         }
 
         private void guardarToolStripMenuItem4_Click(object sender, EventArgs e)
         {
-            string rutaArchivo = label1.Text;
-            using (StreamWriter writer = new StreamWriter(rutaArchivo))
+            if (!string.IsNullOrEmpty(label1.Text))
             {
-                writer.WriteLine(codigo.Text);
+                File.WriteAllText(label1.Text, codigo.Text);
             }
         }
+        #endregion
 
-        // USO DE ANTLR
+        #region ANTLR Integration
         private SiriusLanguageParser SetupAntlrParser()
         {
             var inputStream = new AntlrInputStream(codigo.Text);
             var lexer = new SiriusLanguageLexer(inputStream);
-            var tokenStream = new CommonTokenStream(lexer);
-            return new SiriusLanguageParser(tokenStream);
+            return new SiriusLanguageParser(new CommonTokenStream(lexer));
         }
+        #endregion
 
-
-
+        #region Tokenización y Coloreado
         private void tokenizarToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -246,23 +117,10 @@ namespace Compilador
                 var tokenStream = (CommonTokenStream)parser.InputStream;
                 tokenStream.Fill();
 
-                // Configurar visualización de tokens
-                tokentipebox.Items.Clear();
-                tokenbox.Items.Clear();
-                posicion.Items.Clear();
-
-                foreach (var token in tokenStream.GetTokens())
-                {
-                    if (token.Type == -1) continue; // Omitir EOF
-
-                    var tokenName = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type);
-                    tokentipebox.Items.Add(tokenName);
-                    tokenbox.Items.Add(token.Text);
-                    posicion.Items.Add($"Línea {token.Line}:{token.Column}");
-                }
-
+                DisplayTokens(tokenStream);
                 ColorizeTokensAntlr(tokenStream.GetTokens());
-                MessageBox.Show("Tokenización con ANTLR completada");
+                MessageBox.Show($"Tokenización completada. Total tokens: {tokenStream.GetTokens().Count - 1}",
+                              "Tokenización", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -270,77 +128,40 @@ namespace Compilador
             }
         }
 
+        private void DisplayTokens(CommonTokenStream tokenStream)
+        {
+            tokentipebox.Items.Clear();
+            tokenbox.Items.Clear();
+            posicion1.Items.Clear();
+
+            foreach (var token in tokenStream.GetTokens())
+            {
+                if (token.Type == -1) continue;
+
+                tokentipebox.Items.Add(SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type));
+                tokenbox.Items.Add(token.Text);
+                posicion1.Items.Add($"Línea {token.Line}:{token.Column}");
+            }
+        }
+
         private void ColorizeTokensAntlr(IList<IToken> tokens)
         {
             int originalPos = codigo.SelectionStart;
             codigo.SelectAll();
-            codigo.SelectionColor = Color.White; // Color por defecto
+            codigo.SelectionColor = Color.White;
             codigo.DeselectAll();
 
             foreach (var token in tokens)
             {
-                if (token.Type == -1) continue; // Omitir EOF
+                if (token.Type == -1) continue;
 
                 int start = GetPositionInTextBox(token.Line, token.Column);
                 int length = token.StopIndex - token.StartIndex + 1;
 
-                // Validar que la selección esté dentro de los límites
                 if (start >= 0 && start + length <= codigo.Text.Length)
                 {
                     codigo.Select(start, length);
-
-                    // Mapeo completo de tokens a colores
-                    var tokenType = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type);
-                    switch (tokenType)
-                    {
-                        case "VAR":
-                        case "VAL":
-                            codigo.SelectionColor = Color.DodgerBlue;
-                            break;
-                        case "FUN":
-                        case "FOR":
-                        case "WHILE":
-                        case "IF":
-                        case "ELSE":
-                            codigo.SelectionColor = Color.Blue;
-                            break;
-                        case "PRINT":
-                        case "PRINTLN":
-                            codigo.SelectionColor = Color.Cyan;
-                            break;
-                        case "NUMBER":
-                            codigo.SelectionColor = Color.LightGreen;
-                            break;
-                        case "STRING":
-                            codigo.SelectionColor = Color.Orange;
-                            break;
-                        case "TYPE_INT":
-                        case "TYPE_STR":
-                        case "TYPE_BOOL":
-                            codigo.SelectionColor = Color.LightSkyBlue;
-                            break;
-                        case "PLUS":
-                        case "MINUS":
-                        case "MULTIPLY":
-                        case "DIVIDE":
-                            codigo.SelectionColor = Color.Gold;
-                            break;
-                        case "LPAREN":
-                        case "RPAREN":
-                        case "LBRACE":
-                        case "RBRACE":
-                        case "SEMICOLON":
-                        case "COMMA":
-                            codigo.SelectionColor = Color.Magenta;
-                            break;
-                        case "COMMENT_LINE":
-                        case "COMMENT_BLOCK":
-                            codigo.SelectionColor = Color.Gray;
-                            break;
-                        default:
-                            codigo.SelectionColor = Color.White;
-                            break;
-                    }
+                    codigo.SelectionColor = GetTokenColor(token);
                 }
             }
 
@@ -348,20 +169,99 @@ namespace Compilador
             codigo.SelectionLength = 0;
         }
 
+        private Color GetTokenColor(IToken token)
+        {
+            var tokenType = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(token.Type);
+
+            switch (tokenType)
+            {
+                case "VAR":
+                case "VAL":
+                    return Color.DodgerBlue;
+
+                case "FUN":
+                case "FOR":
+                case "WHILE":
+                case "IF":
+                case "ELSE":
+                case "RETURN":
+                    return Color.Blue;
+
+                case "PRINT":
+                case "PRINTLN":
+                    return Color.Cyan;
+
+                case "NUMBER":
+                    return Color.LightGreen;
+
+                case "STRING":
+                    return Color.Orange;
+
+                case "TYPE_INT":
+                case "TYPE_STR":
+                case "TYPE_BOOL":
+                    return Color.LightSkyBlue;
+
+                case "PLUS":
+                case "MINUS":
+                case "MULTIPLY":
+                case "DIVIDE":
+                case "ASSIGN":
+                    return Color.Gold;
+
+                case "LPAREN":
+                case "RPAREN":
+                case "LBRACE":
+                case "RBRACE":
+                case "SEMICOLON":
+                case "COMMA":
+                    return Color.Magenta;
+
+                case "COMMENT_LINE":
+                case "COMMENT_BLOCK":
+                    return Color.Gray;
+
+                case "IDENTIFIER":
+                    return Color.Cyan;
+
+                default:
+                    return Color.White;
+            }
+        }
+
+        private int GetPositionInTextBox(int line, int column)
+        {
+            line = Math.Max(1, line);
+            column = Math.Max(0, column);
+
+            string[] lines = codigo.Text.Split('\n');
+            int position = 0;
+
+            for (int i = 0; i < line - 1 && i < lines.Length; i++)
+            {
+                position += lines[i].Length + 1;
+            }
+
+            if (line - 1 < lines.Length)
+            {
+                column = Math.Min(column, lines[line - 1].Length);
+            }
+
+            return position + column;
+        }
+        #endregion
+
+        #region Análisis Sintáctico y Árbol
         private void parserToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
             try
             {
                 var parser = SetupAntlrParser();
                 parser.RemoveErrorListeners();
                 parser.AddErrorListener(new AntlrErrorListener());
 
-                var tree = parser.program(); // Usa la regla inicial de tu gramática
-
-                MessageBox.Show("Análisis sintáctico exitoso!\n" +
-                              $"Árbol: {tree.ToStringTree(parser)}",
-                              "Parser ANTLR", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                var tree = parser.program();
+                MessageBox.Show("Análisis sintáctico exitoso!", "Parser ANTLR", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -369,20 +269,207 @@ namespace Compilador
             }
         }
 
-        // Clase para manejo de errores
+        private void ArbolBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
+
+                treeView1.BeginUpdate();
+                treeView1.Nodes.Clear();
+                BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
+                treeView1.ExpandAll();
+                treeView1.EndUpdate();
+
+              
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BuildTreeView(IParseTree tree, TreeNode parentNode)
+        {
+            if (tree is TerminalNodeImpl terminal)
+            {
+                string tokenName = SiriusLanguageLexer.DefaultVocabulary.GetSymbolicName(terminal.Symbol.Type);
+                parentNode.Nodes.Add($"[TOKEN] {tokenName}: {terminal.GetText()}");
+            }
+            else if (tree is ParserRuleContext ruleNode)
+            {
+                var newNode = parentNode.Nodes.Add($"[REGLA] {SiriusLanguageParser.ruleNames[ruleNode.RuleIndex]}");
+                for (int i = 0; i < ruleNode.ChildCount; i++)
+                {
+                    BuildTreeView(ruleNode.GetChild(i), newNode);
+                }
+            }
+        }
+
         public class AntlrErrorListener : BaseErrorListener
         {
             public override void SyntaxError(TextWriter output, IRecognizer recognizer,
                 IToken offendingSymbol, int line, int charPositionInLine,
                 string msg, RecognitionException e)
             {
-                // Cambia el parámetro 'output' a '_output' si es necesario
-                throw new Exception($"Error en línea {line}, posición {charPositionInLine}: {msg}");
+                string errorType = msg.Contains("extraneous input") ? "Token inesperado" :
+                                 msg.Contains("missing") ? "Falta token" : "Error de Sintaxis";
+
+                throw new Exception($"{errorType} en línea {line}, columna {charPositionInLine + 1}:\n" +
+                                   $"→ Token: '{offendingSymbol?.Text ?? "null"}' \n" +
+                                   $"→ Detalle: {msg.Replace("'", "`")}");
             }
         }
 
 
 
-       
+        #endregion
+
+
+        // Analizador Semántico
+        private void semanticBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
+
+                var walker = new ParseTreeWalker();
+                var analyzer = new SemanticAnalyzer();
+                walker.Walk(analyzer, tree);
+
+                // Validar después de recorrer todo el árbol
+                analyzer.ValidateSemantics();
+
+                MessageBox.Show("✔ Análisis semántico completado sin errores",
+                              "Éxito",
+                              MessageBoxButtons.OK,
+                              MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Errores semánticos encontrados:\n{ex.Message}",
+                               "Error",
+                               MessageBoxButtons.OK,
+                               MessageBoxIcon.Error);
+            }
+        }
+
+        public class SemanticAnalyzer : SiriusLanguageBaseListener
+        {
+            private readonly Stack<Dictionary<string, string>> _scopeStack;
+            private readonly List<string> _errors;
+
+            public SemanticAnalyzer()
+            {
+                _scopeStack = new Stack<Dictionary<string, string>>();
+                _scopeStack.Push(new Dictionary<string, string>()); // Ámbito global
+                _errors = new List<string>();
+            }
+
+            public override void EnterVariableDeclaration(SiriusLanguageParser.VariableDeclarationContext context)
+            {
+                var identifier = context.IDENTIFIER();
+                if (identifier == null)
+                {
+                    AddError(context.Start, "Declaración de variable sin identificador");
+                    return;
+                }
+
+                string varName = identifier.GetText();
+                var currentScope = _scopeStack.Peek();
+
+                if (currentScope.ContainsKey(varName))
+                {
+                    AddError(identifier.Symbol, $"La variable '{varName}' ya está declarada en este ámbito");
+                }
+                else
+                {
+                    string type = context.type() != null ? context.type().GetText() : "infer";
+                    currentScope[varName] = type;
+                }
+            }
+
+            public override void EnterAssignment(SiriusLanguageParser.AssignmentContext context)
+            {
+                var identifier = context.IDENTIFIER();
+                if (identifier == null) return;
+
+                string varName = identifier.GetText();
+                bool variableDeclared = false;
+
+                foreach (var scope in _scopeStack)
+                {
+                    if (scope.ContainsKey(varName))
+                    {
+                        variableDeclared = true;
+                        break;
+                    }
+                }
+
+                if (!variableDeclared)
+                {
+                    AddError(identifier.Symbol, $"Variable no declarada '{varName}'");
+                }
+            }
+
+            public override void EnterFunctionDeclaration(SiriusLanguageParser.FunctionDeclarationContext context)
+            {
+                var funcName = context.IDENTIFIER();
+                if (funcName == null)
+                {
+                    AddError(context.Start, "Función sin nombre");
+                    return;
+                }
+
+                // Crear nuevo ámbito para la función
+                _scopeStack.Push(new Dictionary<string, string>());
+
+                // Registrar parámetros
+                if (context.parameterList() != null)
+                {
+                    foreach (var param in context.parameterList().parameter())
+                    {
+                        var paramNameToken = param.IDENTIFIER();
+                        if (paramNameToken == null) continue;
+
+                        string paramName = paramNameToken.GetText();
+                        if (_scopeStack.Peek().ContainsKey(paramName))
+                        {
+                            AddError(paramNameToken.Symbol, $"Parámetro duplicado '{paramName}'");
+                        }
+                        else
+                        {
+                            string paramType = param.type() != null ? param.type().GetText() : "infer";
+                            _scopeStack.Peek()[paramName] = paramType;
+                        }
+                    }
+                }
+            }
+
+            public override void ExitFunctionDeclaration(SiriusLanguageParser.FunctionDeclarationContext context)
+            {
+                if (_scopeStack.Count > 1)
+                {
+                    _scopeStack.Pop();
+                }
+            }
+
+            private void AddError(IToken token, string message)
+            {
+                string errorMsg = $"Línea {token.Line}:{token.Column} - {message}";
+                _errors.Add(errorMsg);
+            }
+
+            public void ValidateSemantics()
+            {
+                if (_errors.Count > 0)
+                {
+                    throw new Exception(string.Join("\n", _errors));
+                }
+            }
+        }
+
     }
 }
