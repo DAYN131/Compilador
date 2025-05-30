@@ -454,12 +454,153 @@ namespace Compilador
             form.Show(); // Cambiado de ShowDialog() a Show()
         }
 
+        private void intermedioToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Primero realizar análisis semántico
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
 
+                var analyzer = new SemanticAnalyzer();
+                analyzer.VisitProgram(tree);
 
+                if (analyzer.HasErrors())
+                {
+                    ShowSemanticErrors(analyzer.GetErrors());
+                    return;
+                }
 
+                // Si no hay errores semánticos, generar código intermedio
+                var codeGenerator = new ThreeAddressCodeGenerator(analyzer);
+                codeGenerator.VisitProgram(tree);
 
+                // Guardar automáticamente en el escritorio
+                codeGenerator.SaveToFile();
 
+                // Mostrar el código generado
+                ShowIntermediateCode(codeGenerator.GetGeneratedCode());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error durante generación de código intermedio: {ex.Message}",
+                              "Error",
+                              MessageBoxButtons.OK,
+                              MessageBoxIcon.Error);
+            }
+        }
 
+        private void ShowIntermediateCode(List<string> intermediateCode)
+        {
+            var form = new Form
+            {
+                Text = "Código Intermedio Generado",
+                Width = 800,
+                Height = 500,
+                StartPosition = FormStartPosition.CenterParent
+            };
 
+            var textBox = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 10),
+                ReadOnly = true,
+                Text = string.Join(Environment.NewLine, intermediateCode)
+            };
+
+            var saveButton = new System.Windows.Forms.Button
+            {
+                Text = "Guardar Código",
+                Dock = DockStyle.Bottom
+            };
+
+            saveButton.Click += (s, args) =>
+            {
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "Archivos TAC|*.tac|Todos los archivos|*.*",
+                    Title = "Guardar código intermedio"
+                };
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllLines(saveDialog.FileName, intermediateCode);
+                    MessageBox.Show("Código intermedio guardado exitosamente",
+                                  "Éxito",
+                                  MessageBoxButtons.OK,
+                                  MessageBoxIcon.Information);
+                }
+            };
+
+            form.Controls.Add(textBox);
+            form.Controls.Add(saveButton);
+            form.Show();
+        }
+
+        private void roslynToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 1. Primero realizar análisis semántico
+                var parser = SetupAntlrParser();
+                var tree = parser.program();
+
+                var analyzer = new SemanticAnalyzer();
+                analyzer.VisitProgram(tree);
+
+                if (analyzer.HasErrors())
+                {
+                    ShowSemanticErrors(analyzer.GetErrors());
+                    return;
+                }
+
+                // 2. Generar código intermedio
+                var codeGenerator = new ThreeAddressCodeGenerator(analyzer);
+                codeGenerator.VisitProgram(tree);
+                var intermediateCode = codeGenerator.GetGeneratedCode();
+
+                // 3. Compilar con Roslyn
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string exePath = Path.Combine(desktopPath, "output.exe");
+
+                var roslynCompiler = new RoslynCompiler();
+                bool success = roslynCompiler.CompileFromTAC(intermediateCode, exePath);
+
+                if (success)
+                {
+                    // Mostrar mensaje de éxito
+                    var result = MessageBox.Show($"✔ Compilación exitosa!\nEjecutable generado en: {exePath}\n\n¿Deseas ejecutar el programa ahora?",
+                                              "Éxito",
+                                              MessageBoxButtons.YesNo,
+                                              MessageBoxIcon.Information);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = "cmd.exe",
+                            Arguments = $"/K \"{exePath}\" && pause",  // Ejecuta el programa Y LUEGO hace una pausa
+                            UseShellExecute = true,
+                            CreateNoWindow = false
+                        };
+                        Process.Start(startInfo);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("✖ Error durante la compilación",
+                                  "Error",
+                                  MessageBoxButtons.OK,
+                                  MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error durante compilación: {ex.Message}",
+                              "Error",
+                              MessageBoxButtons.OK,
+                              MessageBoxIcon.Error);
+            }
+        }
     }
 }
