@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -6,13 +7,23 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Compilador.Generated;
+using Microsoft.Win32;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Compilador.abrir;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
+using static Compilador.SemanticAnalyzer;
+using static Compilador.Generated.SiriusLanguageParser;
+using System.Diagnostics;
+
+
 
 
 namespace Compilador
@@ -104,7 +115,17 @@ namespace Compilador
         {
             var inputStream = new AntlrInputStream(codigo.Text);
             var lexer = new SiriusLanguageLexer(inputStream);
-            return new SiriusLanguageParser(new CommonTokenStream(lexer));
+            var tokenStream = new CommonTokenStream(lexer);
+
+            tokenStream.Fill(); // Carga todos los tokens
+
+            var parser = new SiriusLanguageParser(tokenStream);
+
+            // Configuración importante para capturar errores
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(new AntlrErrorListener());
+
+            return parser;
         }
         #endregion
 
@@ -324,123 +345,10 @@ namespace Compilador
 
 
 
+
+
+
         #endregion
-
-
-        public class SemanticAnalyzer : SiriusLanguageBaseListener
-        {
-            private readonly Stack<Dictionary<string, string>> _scopeStack;
-            private readonly List<string> _errors;
-
-            public SemanticAnalyzer()
-            {
-                _scopeStack = new Stack<Dictionary<string, string>>();
-                _scopeStack.Push(new Dictionary<string, string>()); // Ámbito global
-                _errors = new List<string>();
-            }
-
-            public override void EnterVariableDeclaration(SiriusLanguageParser.VariableDeclarationContext context)
-            {
-                var identifier = context.IDENTIFIER();
-                if (identifier == null)
-                {
-                    AddError(context.Start, "Declaración de variable sin identificador");
-                    return;
-                }
-
-                string varName = identifier.GetText();
-                var currentScope = _scopeStack.Peek();
-
-                if (currentScope.ContainsKey(varName))
-                {
-                    AddError(identifier.Symbol, $"La variable '{varName}' ya está declarada en este ámbito");
-                }
-                else
-                {
-                    string type = context.type() != null ? context.type().GetText() : "infer";
-                    currentScope[varName] = type;
-                }
-            }
-
-            public override void EnterAssignment(SiriusLanguageParser.AssignmentContext context)
-            {
-                var identifier = context.IDENTIFIER();
-                if (identifier == null) return;
-
-                string varName = identifier.GetText();
-                bool variableDeclared = false;
-
-                foreach (var scope in _scopeStack)
-                {
-                    if (scope.ContainsKey(varName))
-                    {
-                        variableDeclared = true;
-                        break;
-                    }
-                }
-
-                if (!variableDeclared)
-                {
-                    AddError(identifier.Symbol, $"Variable no declarada '{varName}'");
-                }
-            }
-
-            public override void EnterFunctionDeclaration(SiriusLanguageParser.FunctionDeclarationContext context)
-            {
-                var funcName = context.IDENTIFIER();
-                if (funcName == null)
-                {
-                    AddError(context.Start, "Función sin nombre");
-                    return;
-                }
-
-                // Crear nuevo ámbito para la función
-                _scopeStack.Push(new Dictionary<string, string>());
-
-                // Registrar parámetros
-                if (context.parameterList() != null)
-                {
-                    foreach (var param in context.parameterList().parameter())
-                    {
-                        var paramNameToken = param.IDENTIFIER();
-                        if (paramNameToken == null) continue;
-
-                        string paramName = paramNameToken.GetText();
-                        if (_scopeStack.Peek().ContainsKey(paramName))
-                        {
-                            AddError(paramNameToken.Symbol, $"Parámetro duplicado '{paramName}'");
-                        }
-                        else
-                        {
-                            string paramType = param.type() != null ? param.type().GetText() : "infer";
-                            _scopeStack.Peek()[paramName] = paramType;
-                        }
-                    }
-                }
-            }
-
-            public override void ExitFunctionDeclaration(SiriusLanguageParser.FunctionDeclarationContext context)
-            {
-                if (_scopeStack.Count > 1)
-                {
-                    _scopeStack.Pop();
-                }
-            }
-
-            private void AddError(IToken token, string message)
-            {
-                string errorMsg = $"Línea {token.Line}:{token.Column} - {message}";
-                _errors.Add(errorMsg);
-            }
-
-            public void ValidateSemantics()
-            {
-                if (_errors.Count > 0)
-                {
-                    throw new Exception(string.Join("\n", _errors));
-                }
-            }
-        }
 
         private void arbolToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -463,6 +371,9 @@ namespace Compilador
             }
         }
 
+
+
+
         private void semanticoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -470,26 +381,84 @@ namespace Compilador
                 var parser = SetupAntlrParser();
                 var tree = parser.program();
 
-                var walker = new ParseTreeWalker();
                 var analyzer = new SemanticAnalyzer();
-                walker.Walk(analyzer, tree);
+                analyzer.VisitProgram(tree);
 
-                // Validar después de recorrer todo el árbol
-                analyzer.ValidateSemantics();
-
-                MessageBox.Show("✔ Análisis semántico completado sin errores",
-                              "Éxito",
-                              MessageBoxButtons.OK,
-                              MessageBoxIcon.Information);
+                if (!analyzer.HasErrors())
+                {
+                    ShowSemanticSuccess();
+                }
+                else
+                {
+                    ShowSemanticErrors(analyzer.GetErrors());
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Errores semánticos encontrados:\n{ex.Message}",
+                MessageBox.Show($"Error durante análisis semántico: {ex.Message}",
                                "Error",
                                MessageBoxButtons.OK,
                                MessageBoxIcon.Error);
             }
         }
+
+        private void ShowSemanticSuccess()
+        {
+            MessageBox.Show("✔ El análisis semántico se completó sin errores",
+                           "Éxito",
+                           MessageBoxButtons.OK,
+                           MessageBoxIcon.Information);
+        }
+
+        private void ShowSemanticErrors(List<string> errors)
+        {
+            var form = new Form
+            {
+                Text = "Errores Semánticos",
+                Width = 800,
+                Height = 500,
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            var grid = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                RowHeadersVisible = false
+            };
+
+            grid.Columns.Add("Line", "Línea");
+            grid.Columns.Add("Column", "Columna");
+            grid.Columns.Add("Message", "Mensaje de Error");
+
+            foreach (var error in errors)
+            {
+                // Parsear línea y columna del mensaje de error
+                var parts = error.Split(new[] { ": - " }, 2, StringSplitOptions.None);
+                var location = parts[0].Replace("Línea ", "").Split(':');
+                var message = parts.Length > 1 ? parts[1] : error;
+
+                if (location.Length >= 2)
+                {
+                    grid.Rows.Add(location[0], location[1], message);
+                }
+                else
+                {
+                    grid.Rows.Add("", "", message);
+                }
+            }
+
+            form.Controls.Add(grid);
+            form.Show(); // Cambiado de ShowDialog() a Show()
+        }
+
+
+
+
+
+
 
 
     }

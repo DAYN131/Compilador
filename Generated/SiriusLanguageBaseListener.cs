@@ -229,18 +229,6 @@ public partial class SiriusLanguageBaseListener : ISiriusLanguageListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitExpression([NotNull] SiriusLanguageParser.ExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.assignment"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAssignment([NotNull] SiriusLanguageParser.AssignmentContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.assignment"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAssignment([NotNull] SiriusLanguageParser.AssignmentContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.logicOr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -289,29 +277,29 @@ public partial class SiriusLanguageBaseListener : ISiriusLanguageListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitComparison([NotNull] SiriusLanguageParser.ComparisonContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.term"/>.
+	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.additive"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTerm([NotNull] SiriusLanguageParser.TermContext context) { }
+	public virtual void EnterAdditive([NotNull] SiriusLanguageParser.AdditiveContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.term"/>.
+	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.additive"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTerm([NotNull] SiriusLanguageParser.TermContext context) { }
+	public virtual void ExitAdditive([NotNull] SiriusLanguageParser.AdditiveContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.factor"/>.
+	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.multiplicative"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterFactor([NotNull] SiriusLanguageParser.FactorContext context) { }
+	public virtual void EnterMultiplicative([NotNull] SiriusLanguageParser.MultiplicativeContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.factor"/>.
+	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.multiplicative"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitFactor([NotNull] SiriusLanguageParser.FactorContext context) { }
+	public virtual void ExitMultiplicative([NotNull] SiriusLanguageParser.MultiplicativeContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.unary"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -337,6 +325,18 @@ public partial class SiriusLanguageBaseListener : ISiriusLanguageListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitPrimary([NotNull] SiriusLanguageParser.PrimaryContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAssignment([NotNull] SiriusLanguageParser.AssignmentContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAssignment([NotNull] SiriusLanguageParser.AssignmentContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.functionCall"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -349,17 +349,47 @@ public partial class SiriusLanguageBaseListener : ISiriusLanguageListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitFunctionCall([NotNull] SiriusLanguageParser.FunctionCallContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SiriusLanguageParser.literal"/>.
+	/// Enter a parse tree produced by the <c>booleanLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterLiteral([NotNull] SiriusLanguageParser.LiteralContext context) { }
+	public virtual void EnterBooleanLiteral([NotNull] SiriusLanguageParser.BooleanLiteralContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SiriusLanguageParser.literal"/>.
+	/// Exit a parse tree produced by the <c>booleanLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitLiteral([NotNull] SiriusLanguageParser.LiteralContext context) { }
+	public virtual void ExitBooleanLiteral([NotNull] SiriusLanguageParser.BooleanLiteralContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>numberLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNumberLiteral([NotNull] SiriusLanguageParser.NumberLiteralContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>numberLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNumberLiteral([NotNull] SiriusLanguageParser.NumberLiteralContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>stringLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterStringLiteral([NotNull] SiriusLanguageParser.StringLiteralContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>stringLiteral</c>
+	/// labeled alternative in <see cref="SiriusLanguageParser.literal"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitStringLiteral([NotNull] SiriusLanguageParser.StringLiteralContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>

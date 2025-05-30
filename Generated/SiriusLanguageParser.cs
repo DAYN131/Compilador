@@ -48,16 +48,17 @@ public partial class SiriusLanguageParser : Parser {
 		RULE_functionDeclaration = 4, RULE_parameterList = 5, RULE_parameter = 6, 
 		RULE_type = 7, RULE_statement = 8, RULE_printStatement = 9, RULE_ifStatement = 10, 
 		RULE_forStatement = 11, RULE_whileStatement = 12, RULE_returnStatement = 13, 
-		RULE_block = 14, RULE_expression = 15, RULE_assignment = 16, RULE_logicOr = 17, 
-		RULE_logicAnd = 18, RULE_equality = 19, RULE_comparison = 20, RULE_term = 21, 
-		RULE_factor = 22, RULE_unary = 23, RULE_primary = 24, RULE_functionCall = 25, 
+		RULE_block = 14, RULE_expression = 15, RULE_logicOr = 16, RULE_logicAnd = 17, 
+		RULE_equality = 18, RULE_comparison = 19, RULE_additive = 20, RULE_multiplicative = 21, 
+		RULE_unary = 22, RULE_primary = 23, RULE_assignment = 24, RULE_functionCall = 25, 
 		RULE_literal = 26;
 	public static readonly string[] ruleNames = {
 		"program", "declaration", "importDeclaration", "variableDeclaration", 
 		"functionDeclaration", "parameterList", "parameter", "type", "statement", 
 		"printStatement", "ifStatement", "forStatement", "whileStatement", "returnStatement", 
-		"block", "expression", "assignment", "logicOr", "logicAnd", "equality", 
-		"comparison", "term", "factor", "unary", "primary", "functionCall", "literal"
+		"block", "expression", "logicOr", "logicAnd", "equality", "comparison", 
+		"additive", "multiplicative", "unary", "primary", "assignment", "functionCall", 
+		"literal"
 	};
 
 	private static readonly string[] _LiteralNames = {
@@ -153,38 +154,19 @@ public partial class SiriusLanguageParser : Parser {
 				{
 				State = 56;
 				ErrorHandler.Sync(this);
-				switch (TokenStream.LA(1)) {
-				case VAR:
-				case VAL:
-				case FUN:
-				case IMPORT:
+				switch ( Interpreter.AdaptivePredict(TokenStream,0,Context) ) {
+				case 1:
 					{
 					State = 54;
 					declaration();
 					}
 					break;
-				case TRUE:
-				case FALSE:
-				case NOT:
-				case FOR:
-				case WHILE:
-				case IF:
-				case PRINT:
-				case PRINTLN:
-				case RETURN:
-				case LPAREN:
-				case LBRACE:
-				case MINUS:
-				case IDENTIFIER:
-				case NUMBER:
-				case STRING:
+				case 2:
 					{
 					State = 55;
 					statement();
 					}
 					break;
-				default:
-					throw new NoViableAltException(this);
 				}
 				}
 				State = 60;
@@ -674,6 +656,9 @@ public partial class SiriusLanguageParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ReturnStatementContext returnStatement() {
 			return GetRuleContext<ReturnStatementContext>(0);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public VariableDeclarationContext variableDeclaration() {
+			return GetRuleContext<VariableDeclarationContext>(0);
+		}
 		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block() {
 			return GetRuleContext<BlockContext>(0);
 		}
@@ -702,7 +687,7 @@ public partial class SiriusLanguageParser : Parser {
 		StatementContext _localctx = new StatementContext(Context, State);
 		EnterRule(_localctx, 16, RULE_statement);
 		try {
-			State = 123;
+			State = 126;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case PRINT:
@@ -745,10 +730,20 @@ public partial class SiriusLanguageParser : Parser {
 				Match(SEMICOLON);
 				}
 				break;
-			case LBRACE:
+			case VAR:
+			case VAL:
 				EnterOuterAlt(_localctx, 6);
 				{
 				State = 119;
+				variableDeclaration();
+				State = 120;
+				Match(SEMICOLON);
+				}
+				break;
+			case LBRACE:
+				EnterOuterAlt(_localctx, 7);
+				{
+				State = 122;
 				block();
 				}
 				break;
@@ -760,11 +755,11 @@ public partial class SiriusLanguageParser : Parser {
 			case IDENTIFIER:
 			case NUMBER:
 			case STRING:
-				EnterOuterAlt(_localctx, 7);
+				EnterOuterAlt(_localctx, 8);
 				{
-				State = 120;
+				State = 123;
 				expression();
-				State = 121;
+				State = 124;
 				Match(SEMICOLON);
 				}
 				break;
@@ -816,7 +811,7 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 125;
+			State = 128;
 			_la = TokenStream.LA(1);
 			if ( !(_la==PRINT || _la==PRINTLN) ) {
 			ErrorHandler.RecoverInline(this);
@@ -825,11 +820,11 @@ public partial class SiriusLanguageParser : Parser {
 				ErrorHandler.ReportMatch(this);
 			    Consume();
 			}
-			State = 126;
+			State = 129;
 			Match(LPAREN);
-			State = 127;
+			State = 130;
 			expression();
-			State = 128;
+			State = 131;
 			Match(RPAREN);
 			}
 		}
@@ -899,50 +894,50 @@ public partial class SiriusLanguageParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 130;
-			Match(IF);
-			State = 131;
-			Match(LPAREN);
-			State = 132;
-			expression();
 			State = 133;
-			Match(RPAREN);
+			Match(IF);
 			State = 134;
+			Match(LPAREN);
+			State = 135;
+			expression();
+			State = 136;
+			Match(RPAREN);
+			State = 137;
 			block();
-			State = 144;
+			State = 147;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 135;
-					Match(ELSE);
-					State = 136;
-					Match(IF);
-					State = 137;
-					Match(LPAREN);
 					State = 138;
-					expression();
+					Match(ELSE);
 					State = 139;
-					Match(RPAREN);
+					Match(IF);
 					State = 140;
+					Match(LPAREN);
+					State = 141;
+					expression();
+					State = 142;
+					Match(RPAREN);
+					State = 143;
 					block();
 					}
 					} 
 				}
-				State = 146;
+				State = 149;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
 			}
-			State = 149;
+			State = 152;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==ELSE) {
 				{
-				State = 147;
+				State = 150;
 				Match(ELSE);
-				State = 148;
+				State = 151;
 				block();
 				}
 			}
@@ -1005,17 +1000,17 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 151;
+			State = 154;
 			Match(FOR);
-			State = 152;
-			Match(LPAREN);
 			State = 155;
+			Match(LPAREN);
+			State = 158;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case VAR:
 			case VAL:
 				{
-				State = 153;
+				State = 156;
 				variableDeclaration();
 				}
 				break;
@@ -1028,7 +1023,7 @@ public partial class SiriusLanguageParser : Parser {
 			case NUMBER:
 			case STRING:
 				{
-				State = 154;
+				State = 157;
 				expression();
 				}
 				break;
@@ -1037,33 +1032,33 @@ public partial class SiriusLanguageParser : Parser {
 			default:
 				break;
 			}
-			State = 157;
+			State = 160;
 			Match(SEMICOLON);
-			State = 159;
+			State = 162;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924414832678L) != 0)) {
 				{
-				State = 158;
+				State = 161;
 				expression();
 				}
 			}
 
-			State = 161;
+			State = 164;
 			Match(SEMICOLON);
-			State = 163;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924414832678L) != 0)) {
-				{
-				State = 162;
-				expression();
-				}
-			}
-
-			State = 165;
-			Match(RPAREN);
 			State = 166;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924414832678L) != 0)) {
+				{
+				State = 165;
+				expression();
+				}
+			}
+
+			State = 168;
+			Match(RPAREN);
+			State = 169;
 			block();
 			}
 		}
@@ -1112,15 +1107,15 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 168;
-			Match(WHILE);
-			State = 169;
-			Match(LPAREN);
-			State = 170;
-			expression();
 			State = 171;
-			Match(RPAREN);
+			Match(WHILE);
 			State = 172;
+			Match(LPAREN);
+			State = 173;
+			expression();
+			State = 174;
+			Match(RPAREN);
+			State = 175;
 			block();
 			}
 		}
@@ -1165,14 +1160,14 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 174;
+			State = 177;
 			Match(RETURN);
-			State = 176;
+			State = 179;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924414832678L) != 0)) {
 				{
-				State = 175;
+				State = 178;
 				expression();
 				}
 			}
@@ -1224,23 +1219,23 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 178;
+			State = 181;
 			Match(LBRACE);
-			State = 182;
+			State = 185;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924419776550L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924419776742L) != 0)) {
 				{
 				{
-				State = 179;
+				State = 182;
 				statement();
 				}
 				}
-				State = 184;
+				State = 187;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 185;
+			State = 188;
 			Match(RBRACE);
 			}
 		}
@@ -1256,11 +1251,11 @@ public partial class SiriusLanguageParser : Parser {
 	}
 
 	public partial class ExpressionContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public AssignmentContext assignment() {
-			return GetRuleContext<AssignmentContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public LogicOrContext logicOr() {
 			return GetRuleContext<LogicOrContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public AssignmentContext assignment() {
+			return GetRuleContext<AssignmentContext>(0);
 		}
 		public ExpressionContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -1284,86 +1279,21 @@ public partial class SiriusLanguageParser : Parser {
 		ExpressionContext _localctx = new ExpressionContext(Context, State);
 		EnterRule(_localctx, 30, RULE_expression);
 		try {
-			State = 189;
+			State = 192;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,15,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 187;
-				assignment();
+				State = 190;
+				logicOr();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
-				{
-				State = 188;
-				logicOr();
-				}
-				break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class AssignmentContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode IDENTIFIER() { return GetToken(SiriusLanguageParser.IDENTIFIER, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ASSIGN() { return GetToken(SiriusLanguageParser.ASSIGN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
-			return GetRuleContext<ExpressionContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public LogicOrContext logicOr() {
-			return GetRuleContext<LogicOrContext>(0);
-		}
-		public AssignmentContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_assignment; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.EnterAssignment(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.ExitAssignment(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public AssignmentContext assignment() {
-		AssignmentContext _localctx = new AssignmentContext(Context, State);
-		EnterRule(_localctx, 32, RULE_assignment);
-		try {
-			State = 195;
-			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,16,Context) ) {
-			case 1:
-				EnterOuterAlt(_localctx, 1);
 				{
 				State = 191;
-				Match(IDENTIFIER);
-				State = 192;
-				Match(ASSIGN);
-				State = 193;
-				expression();
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 194;
-				logicOr();
+				assignment();
 				}
 				break;
 			}
@@ -1410,26 +1340,26 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public LogicOrContext logicOr() {
 		LogicOrContext _localctx = new LogicOrContext(Context, State);
-		EnterRule(_localctx, 34, RULE_logicOr);
+		EnterRule(_localctx, 32, RULE_logicOr);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 197;
+			State = 194;
 			logicAnd();
-			State = 202;
+			State = 199;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==OR) {
 				{
 				{
-				State = 198;
+				State = 195;
 				Match(OR);
-				State = 199;
+				State = 196;
 				logicAnd();
 				}
 				}
-				State = 204;
+				State = 201;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -1477,26 +1407,26 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public LogicAndContext logicAnd() {
 		LogicAndContext _localctx = new LogicAndContext(Context, State);
-		EnterRule(_localctx, 36, RULE_logicAnd);
+		EnterRule(_localctx, 34, RULE_logicAnd);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 205;
+			State = 202;
 			equality();
-			State = 210;
+			State = 207;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==AND) {
 				{
 				{
-				State = 206;
+				State = 203;
 				Match(AND);
-				State = 207;
+				State = 204;
 				equality();
 				}
 				}
-				State = 212;
+				State = 209;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -1520,14 +1450,8 @@ public partial class SiriusLanguageParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ComparisonContext comparison(int i) {
 			return GetRuleContext<ComparisonContext>(i);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] EQUAL() { return GetTokens(SiriusLanguageParser.EQUAL); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode EQUAL(int i) {
-			return GetToken(SiriusLanguageParser.EQUAL, i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] NOTEQUAL() { return GetTokens(SiriusLanguageParser.NOTEQUAL); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOTEQUAL(int i) {
-			return GetToken(SiriusLanguageParser.NOTEQUAL, i);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode EQUAL() { return GetToken(SiriusLanguageParser.EQUAL, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOTEQUAL() { return GetToken(SiriusLanguageParser.NOTEQUAL, 0); }
 		public EqualityContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
@@ -1548,20 +1472,19 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public EqualityContext equality() {
 		EqualityContext _localctx = new EqualityContext(Context, State);
-		EnterRule(_localctx, 38, RULE_equality);
+		EnterRule(_localctx, 36, RULE_equality);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 213;
+			State = 210;
 			comparison();
-			State = 218;
+			State = 213;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==EQUAL || _la==NOTEQUAL) {
+			if (_la==EQUAL || _la==NOTEQUAL) {
 				{
-				{
-				State = 214;
+				State = 211;
 				_la = TokenStream.LA(1);
 				if ( !(_la==EQUAL || _la==NOTEQUAL) ) {
 				ErrorHandler.RecoverInline(this);
@@ -1570,14 +1493,11 @@ public partial class SiriusLanguageParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 215;
+				State = 212;
 				comparison();
 				}
-				}
-				State = 220;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -1592,28 +1512,16 @@ public partial class SiriusLanguageParser : Parser {
 	}
 
 	public partial class ComparisonContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public TermContext[] term() {
-			return GetRuleContexts<TermContext>();
+		[System.Diagnostics.DebuggerNonUserCode] public AdditiveContext[] additive() {
+			return GetRuleContexts<AdditiveContext>();
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public TermContext term(int i) {
-			return GetRuleContext<TermContext>(i);
+		[System.Diagnostics.DebuggerNonUserCode] public AdditiveContext additive(int i) {
+			return GetRuleContext<AdditiveContext>(i);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] LT() { return GetTokens(SiriusLanguageParser.LT); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LT(int i) {
-			return GetToken(SiriusLanguageParser.LT, i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] GT() { return GetTokens(SiriusLanguageParser.GT); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode GT(int i) {
-			return GetToken(SiriusLanguageParser.GT, i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] LTEQ() { return GetTokens(SiriusLanguageParser.LTEQ); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LTEQ(int i) {
-			return GetToken(SiriusLanguageParser.LTEQ, i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] GTEQ() { return GetTokens(SiriusLanguageParser.GTEQ); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode GTEQ(int i) {
-			return GetToken(SiriusLanguageParser.GTEQ, i);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LT() { return GetToken(SiriusLanguageParser.LT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode GT() { return GetToken(SiriusLanguageParser.GT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LTEQ() { return GetToken(SiriusLanguageParser.LTEQ, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode GTEQ() { return GetToken(SiriusLanguageParser.GTEQ, 0); }
 		public ComparisonContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
@@ -1634,20 +1542,19 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public ComparisonContext comparison() {
 		ComparisonContext _localctx = new ComparisonContext(Context, State);
-		EnterRule(_localctx, 40, RULE_comparison);
+		EnterRule(_localctx, 38, RULE_comparison);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 221;
-			term();
-			State = 226;
+			State = 215;
+			additive();
+			State = 218;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 257698037760L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 257698037760L) != 0)) {
 				{
-				{
-				State = 222;
+				State = 216;
 				_la = TokenStream.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 257698037760L) != 0)) ) {
 				ErrorHandler.RecoverInline(this);
@@ -1656,14 +1563,11 @@ public partial class SiriusLanguageParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 223;
-				term();
+				State = 217;
+				additive();
 				}
-				}
-				State = 228;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -1677,12 +1581,12 @@ public partial class SiriusLanguageParser : Parser {
 		return _localctx;
 	}
 
-	public partial class TermContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public FactorContext[] factor() {
-			return GetRuleContexts<FactorContext>();
+	public partial class AdditiveContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public MultiplicativeContext[] multiplicative() {
+			return GetRuleContexts<MultiplicativeContext>();
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public FactorContext factor(int i) {
-			return GetRuleContext<FactorContext>(i);
+		[System.Diagnostics.DebuggerNonUserCode] public MultiplicativeContext multiplicative(int i) {
+			return GetRuleContext<MultiplicativeContext>(i);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] PLUS() { return GetTokens(SiriusLanguageParser.PLUS); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode PLUS(int i) {
@@ -1692,40 +1596,40 @@ public partial class SiriusLanguageParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode MINUS(int i) {
 			return GetToken(SiriusLanguageParser.MINUS, i);
 		}
-		public TermContext(ParserRuleContext parent, int invokingState)
+		public AdditiveContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_term; } }
+		public override int RuleIndex { get { return RULE_additive; } }
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void EnterRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.EnterTerm(this);
+			if (typedListener != null) typedListener.EnterAdditive(this);
 		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void ExitRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.ExitTerm(this);
+			if (typedListener != null) typedListener.ExitAdditive(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public TermContext term() {
-		TermContext _localctx = new TermContext(Context, State);
-		EnterRule(_localctx, 42, RULE_term);
+	public AdditiveContext additive() {
+		AdditiveContext _localctx = new AdditiveContext(Context, State);
+		EnterRule(_localctx, 40, RULE_additive);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 229;
-			factor();
-			State = 234;
+			State = 220;
+			multiplicative();
+			State = 225;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==PLUS || _la==MINUS) {
 				{
 				{
-				State = 230;
+				State = 221;
 				_la = TokenStream.LA(1);
 				if ( !(_la==PLUS || _la==MINUS) ) {
 				ErrorHandler.RecoverInline(this);
@@ -1734,11 +1638,11 @@ public partial class SiriusLanguageParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 231;
-				factor();
+				State = 222;
+				multiplicative();
 				}
 				}
-				State = 236;
+				State = 227;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -1755,7 +1659,7 @@ public partial class SiriusLanguageParser : Parser {
 		return _localctx;
 	}
 
-	public partial class FactorContext : ParserRuleContext {
+	public partial class MultiplicativeContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public UnaryContext[] unary() {
 			return GetRuleContexts<UnaryContext>();
 		}
@@ -1770,40 +1674,40 @@ public partial class SiriusLanguageParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DIVIDE(int i) {
 			return GetToken(SiriusLanguageParser.DIVIDE, i);
 		}
-		public FactorContext(ParserRuleContext parent, int invokingState)
+		public MultiplicativeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_factor; } }
+		public override int RuleIndex { get { return RULE_multiplicative; } }
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void EnterRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.EnterFactor(this);
+			if (typedListener != null) typedListener.EnterMultiplicative(this);
 		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void ExitRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.ExitFactor(this);
+			if (typedListener != null) typedListener.ExitMultiplicative(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public FactorContext factor() {
-		FactorContext _localctx = new FactorContext(Context, State);
-		EnterRule(_localctx, 44, RULE_factor);
+	public MultiplicativeContext multiplicative() {
+		MultiplicativeContext _localctx = new MultiplicativeContext(Context, State);
+		EnterRule(_localctx, 42, RULE_multiplicative);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 237;
+			State = 228;
 			unary();
-			State = 242;
+			State = 233;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==MULTIPLY || _la==DIVIDE) {
 				{
 				{
-				State = 238;
+				State = 229;
 				_la = TokenStream.LA(1);
 				if ( !(_la==MULTIPLY || _la==DIVIDE) ) {
 				ErrorHandler.RecoverInline(this);
@@ -1812,11 +1716,11 @@ public partial class SiriusLanguageParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 239;
+				State = 230;
 				unary();
 				}
 				}
-				State = 244;
+				State = 235;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -1859,17 +1763,17 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public UnaryContext unary() {
 		UnaryContext _localctx = new UnaryContext(Context, State);
-		EnterRule(_localctx, 46, RULE_unary);
+		EnterRule(_localctx, 44, RULE_unary);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 246;
+			State = 237;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==NOT || _la==MINUS) {
 				{
-				State = 245;
+				State = 236;
 				_la = TokenStream.LA(1);
 				if ( !(_la==NOT || _la==MINUS) ) {
 				ErrorHandler.RecoverInline(this);
@@ -1881,7 +1785,7 @@ public partial class SiriusLanguageParser : Parser {
 				}
 			}
 
-			State = 248;
+			State = 239;
 			primary();
 			}
 		}
@@ -1929,43 +1833,92 @@ public partial class SiriusLanguageParser : Parser {
 	[RuleVersion(0)]
 	public PrimaryContext primary() {
 		PrimaryContext _localctx = new PrimaryContext(Context, State);
-		EnterRule(_localctx, 48, RULE_primary);
+		EnterRule(_localctx, 46, RULE_primary);
 		try {
-			State = 257;
+			State = 248;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,24,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,23,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 250;
+				State = 241;
 				literal();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 251;
+				State = 242;
 				Match(IDENTIFIER);
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 252;
+				State = 243;
 				Match(LPAREN);
-				State = 253;
+				State = 244;
 				expression();
-				State = 254;
+				State = 245;
 				Match(RPAREN);
 				}
 				break;
 			case 4:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 256;
+				State = 247;
 				functionCall();
 				}
 				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class AssignmentContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode IDENTIFIER() { return GetToken(SiriusLanguageParser.IDENTIFIER, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ASSIGN() { return GetToken(SiriusLanguageParser.ASSIGN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
+		}
+		public AssignmentContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_assignment; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.EnterAssignment(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.ExitAssignment(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public AssignmentContext assignment() {
+		AssignmentContext _localctx = new AssignmentContext(Context, State);
+		EnterRule(_localctx, 48, RULE_assignment);
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 250;
+			Match(IDENTIFIER);
+			State = 251;
+			Match(ASSIGN);
+			State = 252;
+			expression();
 			}
 		}
 		catch (RecognitionException re) {
@@ -2018,37 +1971,37 @@ public partial class SiriusLanguageParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 259;
+			State = 254;
 			Match(IDENTIFIER);
-			State = 260;
+			State = 255;
 			Match(LPAREN);
-			State = 269;
+			State = 264;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1924414832678L) != 0)) {
 				{
-				State = 261;
+				State = 256;
 				expression();
-				State = 266;
+				State = 261;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					State = 262;
+					State = 257;
 					Match(COMMA);
-					State = 263;
+					State = 258;
 					expression();
 					}
 					}
-					State = 268;
+					State = 263;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
 				}
 				}
 			}
 
-			State = 271;
+			State = 266;
 			Match(RPAREN);
 			}
 		}
@@ -2064,24 +2017,58 @@ public partial class SiriusLanguageParser : Parser {
 	}
 
 	public partial class LiteralContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NUMBER() { return GetToken(SiriusLanguageParser.NUMBER, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRING() { return GetToken(SiriusLanguageParser.STRING, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TRUE() { return GetToken(SiriusLanguageParser.TRUE, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode FALSE() { return GetToken(SiriusLanguageParser.FALSE, 0); }
 		public LiteralContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_literal; } }
+	 
+		public LiteralContext() { }
+		public virtual void CopyFrom(LiteralContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class StringLiteralContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRING() { return GetToken(SiriusLanguageParser.STRING, 0); }
+		public StringLiteralContext(LiteralContext context) { CopyFrom(context); }
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void EnterRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.EnterLiteral(this);
+			if (typedListener != null) typedListener.EnterStringLiteral(this);
 		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void ExitRule(IParseTreeListener listener) {
 			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
-			if (typedListener != null) typedListener.ExitLiteral(this);
+			if (typedListener != null) typedListener.ExitStringLiteral(this);
+		}
+	}
+	public partial class BooleanLiteralContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TRUE() { return GetToken(SiriusLanguageParser.TRUE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode FALSE() { return GetToken(SiriusLanguageParser.FALSE, 0); }
+		public BooleanLiteralContext(LiteralContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.EnterBooleanLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.ExitBooleanLiteral(this);
+		}
+	}
+	public partial class NumberLiteralContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NUMBER() { return GetToken(SiriusLanguageParser.NUMBER, 0); }
+		public NumberLiteralContext(LiteralContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.EnterNumberLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISiriusLanguageListener typedListener = listener as ISiriusLanguageListener;
+			if (typedListener != null) typedListener.ExitNumberLiteral(this);
 		}
 	}
 
@@ -2089,19 +2076,44 @@ public partial class SiriusLanguageParser : Parser {
 	public LiteralContext literal() {
 		LiteralContext _localctx = new LiteralContext(Context, State);
 		EnterRule(_localctx, 52, RULE_literal);
-		int _la;
 		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 273;
-			_la = TokenStream.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 1649267441670L) != 0)) ) {
-			ErrorHandler.RecoverInline(this);
-			}
-			else {
-				ErrorHandler.ReportMatch(this);
-			    Consume();
-			}
+			State = 272;
+			ErrorHandler.Sync(this);
+			switch (TokenStream.LA(1)) {
+			case TRUE:
+				_localctx = new BooleanLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 1);
+				{
+				State = 268;
+				Match(TRUE);
+				}
+				break;
+			case FALSE:
+				_localctx = new BooleanLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 269;
+				Match(FALSE);
+				}
+				break;
+			case NUMBER:
+				_localctx = new NumberLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 3);
+				{
+				State = 270;
+				Match(NUMBER);
+				}
+				break;
+			case STRING:
+				_localctx = new StringLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 4);
+				{
+				State = 271;
+				Match(STRING);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2116,7 +2128,7 @@ public partial class SiriusLanguageParser : Parser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,43,276,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,43,275,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
 		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,
 		2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,1,0,1,0,5,0,57,8,0,10,
@@ -2124,87 +2136,87 @@ public partial class SiriusLanguageParser : Parser {
 		3,1,3,1,3,1,3,3,3,79,8,3,1,3,1,3,1,3,1,4,1,4,1,4,1,4,3,4,88,8,4,1,4,1,
 		4,1,4,3,4,93,8,4,1,4,1,4,1,5,1,5,1,5,5,5,100,8,5,10,5,12,5,103,9,5,1,6,
 		1,6,1,6,1,6,1,7,1,7,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,
-		8,3,8,124,8,8,1,9,1,9,1,9,1,9,1,9,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,
-		10,1,10,1,10,1,10,1,10,5,10,143,8,10,10,10,12,10,146,9,10,1,10,1,10,3,
-		10,150,8,10,1,11,1,11,1,11,1,11,3,11,156,8,11,1,11,1,11,3,11,160,8,11,
-		1,11,1,11,3,11,164,8,11,1,11,1,11,1,11,1,12,1,12,1,12,1,12,1,12,1,12,1,
-		13,1,13,3,13,177,8,13,1,14,1,14,5,14,181,8,14,10,14,12,14,184,9,14,1,14,
-		1,14,1,15,1,15,3,15,190,8,15,1,16,1,16,1,16,1,16,3,16,196,8,16,1,17,1,
-		17,1,17,5,17,201,8,17,10,17,12,17,204,9,17,1,18,1,18,1,18,5,18,209,8,18,
-		10,18,12,18,212,9,18,1,19,1,19,1,19,5,19,217,8,19,10,19,12,19,220,9,19,
-		1,20,1,20,1,20,5,20,225,8,20,10,20,12,20,228,9,20,1,21,1,21,1,21,5,21,
-		233,8,21,10,21,12,21,236,9,21,1,22,1,22,1,22,5,22,241,8,22,10,22,12,22,
-		244,9,22,1,23,3,23,247,8,23,1,23,1,23,1,24,1,24,1,24,1,24,1,24,1,24,1,
-		24,3,24,258,8,24,1,25,1,25,1,25,1,25,1,25,5,25,265,8,25,10,25,12,25,268,
-		9,25,3,25,270,8,25,1,25,1,25,1,26,1,26,1,26,0,0,27,0,2,4,6,8,10,12,14,
-		16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,0,9,1,0,6,7,1,
-		0,8,10,1,0,16,17,1,0,32,33,1,0,34,37,1,0,27,28,1,0,29,30,2,0,5,5,28,28,
-		2,0,1,2,39,40,284,0,58,1,0,0,0,2,68,1,0,0,0,4,70,1,0,0,0,6,74,1,0,0,0,
-		8,83,1,0,0,0,10,96,1,0,0,0,12,104,1,0,0,0,14,108,1,0,0,0,16,123,1,0,0,
-		0,18,125,1,0,0,0,20,130,1,0,0,0,22,151,1,0,0,0,24,168,1,0,0,0,26,174,1,
-		0,0,0,28,178,1,0,0,0,30,189,1,0,0,0,32,195,1,0,0,0,34,197,1,0,0,0,36,205,
-		1,0,0,0,38,213,1,0,0,0,40,221,1,0,0,0,42,229,1,0,0,0,44,237,1,0,0,0,46,
-		246,1,0,0,0,48,257,1,0,0,0,50,259,1,0,0,0,52,273,1,0,0,0,54,57,3,2,1,0,
-		55,57,3,16,8,0,56,54,1,0,0,0,56,55,1,0,0,0,57,60,1,0,0,0,58,56,1,0,0,0,
-		58,59,1,0,0,0,59,61,1,0,0,0,60,58,1,0,0,0,61,62,5,0,0,1,62,1,1,0,0,0,63,
-		69,3,4,2,0,64,65,3,6,3,0,65,66,5,25,0,0,66,69,1,0,0,0,67,69,3,8,4,0,68,
-		63,1,0,0,0,68,64,1,0,0,0,68,67,1,0,0,0,69,3,1,0,0,0,70,71,5,18,0,0,71,
-		72,5,38,0,0,72,73,5,25,0,0,73,5,1,0,0,0,74,75,7,0,0,0,75,78,5,38,0,0,76,
-		77,5,26,0,0,77,79,3,14,7,0,78,76,1,0,0,0,78,79,1,0,0,0,79,80,1,0,0,0,80,
-		81,5,31,0,0,81,82,3,30,15,0,82,7,1,0,0,0,83,84,5,11,0,0,84,85,5,38,0,0,
-		85,87,5,20,0,0,86,88,3,10,5,0,87,86,1,0,0,0,87,88,1,0,0,0,88,89,1,0,0,
-		0,89,92,5,21,0,0,90,91,5,26,0,0,91,93,3,14,7,0,92,90,1,0,0,0,92,93,1,0,
-		0,0,93,94,1,0,0,0,94,95,3,28,14,0,95,9,1,0,0,0,96,101,3,12,6,0,97,98,5,
-		24,0,0,98,100,3,12,6,0,99,97,1,0,0,0,100,103,1,0,0,0,101,99,1,0,0,0,101,
-		102,1,0,0,0,102,11,1,0,0,0,103,101,1,0,0,0,104,105,5,38,0,0,105,106,5,
-		26,0,0,106,107,3,14,7,0,107,13,1,0,0,0,108,109,7,1,0,0,109,15,1,0,0,0,
-		110,111,3,18,9,0,111,112,5,25,0,0,112,124,1,0,0,0,113,124,3,20,10,0,114,
-		124,3,22,11,0,115,124,3,24,12,0,116,117,3,26,13,0,117,118,5,25,0,0,118,
-		124,1,0,0,0,119,124,3,28,14,0,120,121,3,30,15,0,121,122,5,25,0,0,122,124,
-		1,0,0,0,123,110,1,0,0,0,123,113,1,0,0,0,123,114,1,0,0,0,123,115,1,0,0,
-		0,123,116,1,0,0,0,123,119,1,0,0,0,123,120,1,0,0,0,124,17,1,0,0,0,125,126,
-		7,2,0,0,126,127,5,20,0,0,127,128,3,30,15,0,128,129,5,21,0,0,129,19,1,0,
-		0,0,130,131,5,14,0,0,131,132,5,20,0,0,132,133,3,30,15,0,133,134,5,21,0,
-		0,134,144,3,28,14,0,135,136,5,15,0,0,136,137,5,14,0,0,137,138,5,20,0,0,
-		138,139,3,30,15,0,139,140,5,21,0,0,140,141,3,28,14,0,141,143,1,0,0,0,142,
-		135,1,0,0,0,143,146,1,0,0,0,144,142,1,0,0,0,144,145,1,0,0,0,145,149,1,
-		0,0,0,146,144,1,0,0,0,147,148,5,15,0,0,148,150,3,28,14,0,149,147,1,0,0,
-		0,149,150,1,0,0,0,150,21,1,0,0,0,151,152,5,12,0,0,152,155,5,20,0,0,153,
-		156,3,6,3,0,154,156,3,30,15,0,155,153,1,0,0,0,155,154,1,0,0,0,155,156,
-		1,0,0,0,156,157,1,0,0,0,157,159,5,25,0,0,158,160,3,30,15,0,159,158,1,0,
-		0,0,159,160,1,0,0,0,160,161,1,0,0,0,161,163,5,25,0,0,162,164,3,30,15,0,
-		163,162,1,0,0,0,163,164,1,0,0,0,164,165,1,0,0,0,165,166,5,21,0,0,166,167,
-		3,28,14,0,167,23,1,0,0,0,168,169,5,13,0,0,169,170,5,20,0,0,170,171,3,30,
-		15,0,171,172,5,21,0,0,172,173,3,28,14,0,173,25,1,0,0,0,174,176,5,19,0,
-		0,175,177,3,30,15,0,176,175,1,0,0,0,176,177,1,0,0,0,177,27,1,0,0,0,178,
-		182,5,22,0,0,179,181,3,16,8,0,180,179,1,0,0,0,181,184,1,0,0,0,182,180,
-		1,0,0,0,182,183,1,0,0,0,183,185,1,0,0,0,184,182,1,0,0,0,185,186,5,23,0,
-		0,186,29,1,0,0,0,187,190,3,32,16,0,188,190,3,34,17,0,189,187,1,0,0,0,189,
-		188,1,0,0,0,190,31,1,0,0,0,191,192,5,38,0,0,192,193,5,31,0,0,193,196,3,
-		30,15,0,194,196,3,34,17,0,195,191,1,0,0,0,195,194,1,0,0,0,196,33,1,0,0,
-		0,197,202,3,36,18,0,198,199,5,4,0,0,199,201,3,36,18,0,200,198,1,0,0,0,
-		201,204,1,0,0,0,202,200,1,0,0,0,202,203,1,0,0,0,203,35,1,0,0,0,204,202,
-		1,0,0,0,205,210,3,38,19,0,206,207,5,3,0,0,207,209,3,38,19,0,208,206,1,
-		0,0,0,209,212,1,0,0,0,210,208,1,0,0,0,210,211,1,0,0,0,211,37,1,0,0,0,212,
-		210,1,0,0,0,213,218,3,40,20,0,214,215,7,3,0,0,215,217,3,40,20,0,216,214,
-		1,0,0,0,217,220,1,0,0,0,218,216,1,0,0,0,218,219,1,0,0,0,219,39,1,0,0,0,
-		220,218,1,0,0,0,221,226,3,42,21,0,222,223,7,4,0,0,223,225,3,42,21,0,224,
-		222,1,0,0,0,225,228,1,0,0,0,226,224,1,0,0,0,226,227,1,0,0,0,227,41,1,0,
-		0,0,228,226,1,0,0,0,229,234,3,44,22,0,230,231,7,5,0,0,231,233,3,44,22,
-		0,232,230,1,0,0,0,233,236,1,0,0,0,234,232,1,0,0,0,234,235,1,0,0,0,235,
-		43,1,0,0,0,236,234,1,0,0,0,237,242,3,46,23,0,238,239,7,6,0,0,239,241,3,
-		46,23,0,240,238,1,0,0,0,241,244,1,0,0,0,242,240,1,0,0,0,242,243,1,0,0,
-		0,243,45,1,0,0,0,244,242,1,0,0,0,245,247,7,7,0,0,246,245,1,0,0,0,246,247,
-		1,0,0,0,247,248,1,0,0,0,248,249,3,48,24,0,249,47,1,0,0,0,250,258,3,52,
-		26,0,251,258,5,38,0,0,252,253,5,20,0,0,253,254,3,30,15,0,254,255,5,21,
-		0,0,255,258,1,0,0,0,256,258,3,50,25,0,257,250,1,0,0,0,257,251,1,0,0,0,
-		257,252,1,0,0,0,257,256,1,0,0,0,258,49,1,0,0,0,259,260,5,38,0,0,260,269,
-		5,20,0,0,261,266,3,30,15,0,262,263,5,24,0,0,263,265,3,30,15,0,264,262,
-		1,0,0,0,265,268,1,0,0,0,266,264,1,0,0,0,266,267,1,0,0,0,267,270,1,0,0,
-		0,268,266,1,0,0,0,269,261,1,0,0,0,269,270,1,0,0,0,270,271,1,0,0,0,271,
-		272,5,21,0,0,272,51,1,0,0,0,273,274,7,8,0,0,274,53,1,0,0,0,27,56,58,68,
-		78,87,92,101,123,144,149,155,159,163,176,182,189,195,202,210,218,226,234,
-		242,246,257,266,269
+		8,1,8,1,8,1,8,3,8,127,8,8,1,9,1,9,1,9,1,9,1,9,1,10,1,10,1,10,1,10,1,10,
+		1,10,1,10,1,10,1,10,1,10,1,10,1,10,5,10,146,8,10,10,10,12,10,149,9,10,
+		1,10,1,10,3,10,153,8,10,1,11,1,11,1,11,1,11,3,11,159,8,11,1,11,1,11,3,
+		11,163,8,11,1,11,1,11,3,11,167,8,11,1,11,1,11,1,11,1,12,1,12,1,12,1,12,
+		1,12,1,12,1,13,1,13,3,13,180,8,13,1,14,1,14,5,14,184,8,14,10,14,12,14,
+		187,9,14,1,14,1,14,1,15,1,15,3,15,193,8,15,1,16,1,16,1,16,5,16,198,8,16,
+		10,16,12,16,201,9,16,1,17,1,17,1,17,5,17,206,8,17,10,17,12,17,209,9,17,
+		1,18,1,18,1,18,3,18,214,8,18,1,19,1,19,1,19,3,19,219,8,19,1,20,1,20,1,
+		20,5,20,224,8,20,10,20,12,20,227,9,20,1,21,1,21,1,21,5,21,232,8,21,10,
+		21,12,21,235,9,21,1,22,3,22,238,8,22,1,22,1,22,1,23,1,23,1,23,1,23,1,23,
+		1,23,1,23,3,23,249,8,23,1,24,1,24,1,24,1,24,1,25,1,25,1,25,1,25,1,25,5,
+		25,260,8,25,10,25,12,25,263,9,25,3,25,265,8,25,1,25,1,25,1,26,1,26,1,26,
+		1,26,3,26,273,8,26,1,26,0,0,27,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,
+		30,32,34,36,38,40,42,44,46,48,50,52,0,8,1,0,6,7,1,0,8,10,1,0,16,17,1,0,
+		32,33,1,0,34,37,1,0,27,28,1,0,29,30,2,0,5,5,28,28,286,0,58,1,0,0,0,2,68,
+		1,0,0,0,4,70,1,0,0,0,6,74,1,0,0,0,8,83,1,0,0,0,10,96,1,0,0,0,12,104,1,
+		0,0,0,14,108,1,0,0,0,16,126,1,0,0,0,18,128,1,0,0,0,20,133,1,0,0,0,22,154,
+		1,0,0,0,24,171,1,0,0,0,26,177,1,0,0,0,28,181,1,0,0,0,30,192,1,0,0,0,32,
+		194,1,0,0,0,34,202,1,0,0,0,36,210,1,0,0,0,38,215,1,0,0,0,40,220,1,0,0,
+		0,42,228,1,0,0,0,44,237,1,0,0,0,46,248,1,0,0,0,48,250,1,0,0,0,50,254,1,
+		0,0,0,52,272,1,0,0,0,54,57,3,2,1,0,55,57,3,16,8,0,56,54,1,0,0,0,56,55,
+		1,0,0,0,57,60,1,0,0,0,58,56,1,0,0,0,58,59,1,0,0,0,59,61,1,0,0,0,60,58,
+		1,0,0,0,61,62,5,0,0,1,62,1,1,0,0,0,63,69,3,4,2,0,64,65,3,6,3,0,65,66,5,
+		25,0,0,66,69,1,0,0,0,67,69,3,8,4,0,68,63,1,0,0,0,68,64,1,0,0,0,68,67,1,
+		0,0,0,69,3,1,0,0,0,70,71,5,18,0,0,71,72,5,38,0,0,72,73,5,25,0,0,73,5,1,
+		0,0,0,74,75,7,0,0,0,75,78,5,38,0,0,76,77,5,26,0,0,77,79,3,14,7,0,78,76,
+		1,0,0,0,78,79,1,0,0,0,79,80,1,0,0,0,80,81,5,31,0,0,81,82,3,30,15,0,82,
+		7,1,0,0,0,83,84,5,11,0,0,84,85,5,38,0,0,85,87,5,20,0,0,86,88,3,10,5,0,
+		87,86,1,0,0,0,87,88,1,0,0,0,88,89,1,0,0,0,89,92,5,21,0,0,90,91,5,26,0,
+		0,91,93,3,14,7,0,92,90,1,0,0,0,92,93,1,0,0,0,93,94,1,0,0,0,94,95,3,28,
+		14,0,95,9,1,0,0,0,96,101,3,12,6,0,97,98,5,24,0,0,98,100,3,12,6,0,99,97,
+		1,0,0,0,100,103,1,0,0,0,101,99,1,0,0,0,101,102,1,0,0,0,102,11,1,0,0,0,
+		103,101,1,0,0,0,104,105,5,38,0,0,105,106,5,26,0,0,106,107,3,14,7,0,107,
+		13,1,0,0,0,108,109,7,1,0,0,109,15,1,0,0,0,110,111,3,18,9,0,111,112,5,25,
+		0,0,112,127,1,0,0,0,113,127,3,20,10,0,114,127,3,22,11,0,115,127,3,24,12,
+		0,116,117,3,26,13,0,117,118,5,25,0,0,118,127,1,0,0,0,119,120,3,6,3,0,120,
+		121,5,25,0,0,121,127,1,0,0,0,122,127,3,28,14,0,123,124,3,30,15,0,124,125,
+		5,25,0,0,125,127,1,0,0,0,126,110,1,0,0,0,126,113,1,0,0,0,126,114,1,0,0,
+		0,126,115,1,0,0,0,126,116,1,0,0,0,126,119,1,0,0,0,126,122,1,0,0,0,126,
+		123,1,0,0,0,127,17,1,0,0,0,128,129,7,2,0,0,129,130,5,20,0,0,130,131,3,
+		30,15,0,131,132,5,21,0,0,132,19,1,0,0,0,133,134,5,14,0,0,134,135,5,20,
+		0,0,135,136,3,30,15,0,136,137,5,21,0,0,137,147,3,28,14,0,138,139,5,15,
+		0,0,139,140,5,14,0,0,140,141,5,20,0,0,141,142,3,30,15,0,142,143,5,21,0,
+		0,143,144,3,28,14,0,144,146,1,0,0,0,145,138,1,0,0,0,146,149,1,0,0,0,147,
+		145,1,0,0,0,147,148,1,0,0,0,148,152,1,0,0,0,149,147,1,0,0,0,150,151,5,
+		15,0,0,151,153,3,28,14,0,152,150,1,0,0,0,152,153,1,0,0,0,153,21,1,0,0,
+		0,154,155,5,12,0,0,155,158,5,20,0,0,156,159,3,6,3,0,157,159,3,30,15,0,
+		158,156,1,0,0,0,158,157,1,0,0,0,158,159,1,0,0,0,159,160,1,0,0,0,160,162,
+		5,25,0,0,161,163,3,30,15,0,162,161,1,0,0,0,162,163,1,0,0,0,163,164,1,0,
+		0,0,164,166,5,25,0,0,165,167,3,30,15,0,166,165,1,0,0,0,166,167,1,0,0,0,
+		167,168,1,0,0,0,168,169,5,21,0,0,169,170,3,28,14,0,170,23,1,0,0,0,171,
+		172,5,13,0,0,172,173,5,20,0,0,173,174,3,30,15,0,174,175,5,21,0,0,175,176,
+		3,28,14,0,176,25,1,0,0,0,177,179,5,19,0,0,178,180,3,30,15,0,179,178,1,
+		0,0,0,179,180,1,0,0,0,180,27,1,0,0,0,181,185,5,22,0,0,182,184,3,16,8,0,
+		183,182,1,0,0,0,184,187,1,0,0,0,185,183,1,0,0,0,185,186,1,0,0,0,186,188,
+		1,0,0,0,187,185,1,0,0,0,188,189,5,23,0,0,189,29,1,0,0,0,190,193,3,32,16,
+		0,191,193,3,48,24,0,192,190,1,0,0,0,192,191,1,0,0,0,193,31,1,0,0,0,194,
+		199,3,34,17,0,195,196,5,4,0,0,196,198,3,34,17,0,197,195,1,0,0,0,198,201,
+		1,0,0,0,199,197,1,0,0,0,199,200,1,0,0,0,200,33,1,0,0,0,201,199,1,0,0,0,
+		202,207,3,36,18,0,203,204,5,3,0,0,204,206,3,36,18,0,205,203,1,0,0,0,206,
+		209,1,0,0,0,207,205,1,0,0,0,207,208,1,0,0,0,208,35,1,0,0,0,209,207,1,0,
+		0,0,210,213,3,38,19,0,211,212,7,3,0,0,212,214,3,38,19,0,213,211,1,0,0,
+		0,213,214,1,0,0,0,214,37,1,0,0,0,215,218,3,40,20,0,216,217,7,4,0,0,217,
+		219,3,40,20,0,218,216,1,0,0,0,218,219,1,0,0,0,219,39,1,0,0,0,220,225,3,
+		42,21,0,221,222,7,5,0,0,222,224,3,42,21,0,223,221,1,0,0,0,224,227,1,0,
+		0,0,225,223,1,0,0,0,225,226,1,0,0,0,226,41,1,0,0,0,227,225,1,0,0,0,228,
+		233,3,44,22,0,229,230,7,6,0,0,230,232,3,44,22,0,231,229,1,0,0,0,232,235,
+		1,0,0,0,233,231,1,0,0,0,233,234,1,0,0,0,234,43,1,0,0,0,235,233,1,0,0,0,
+		236,238,7,7,0,0,237,236,1,0,0,0,237,238,1,0,0,0,238,239,1,0,0,0,239,240,
+		3,46,23,0,240,45,1,0,0,0,241,249,3,52,26,0,242,249,5,38,0,0,243,244,5,
+		20,0,0,244,245,3,30,15,0,245,246,5,21,0,0,246,249,1,0,0,0,247,249,3,50,
+		25,0,248,241,1,0,0,0,248,242,1,0,0,0,248,243,1,0,0,0,248,247,1,0,0,0,249,
+		47,1,0,0,0,250,251,5,38,0,0,251,252,5,31,0,0,252,253,3,30,15,0,253,49,
+		1,0,0,0,254,255,5,38,0,0,255,264,5,20,0,0,256,261,3,30,15,0,257,258,5,
+		24,0,0,258,260,3,30,15,0,259,257,1,0,0,0,260,263,1,0,0,0,261,259,1,0,0,
+		0,261,262,1,0,0,0,262,265,1,0,0,0,263,261,1,0,0,0,264,256,1,0,0,0,264,
+		265,1,0,0,0,265,266,1,0,0,0,266,267,5,21,0,0,267,51,1,0,0,0,268,273,5,
+		1,0,0,269,273,5,2,0,0,270,273,5,39,0,0,271,273,5,40,0,0,272,268,1,0,0,
+		0,272,269,1,0,0,0,272,270,1,0,0,0,272,271,1,0,0,0,273,53,1,0,0,0,27,56,
+		58,68,78,87,92,101,126,147,152,158,162,166,179,185,192,199,207,213,218,
+		225,233,237,248,261,264,272
 	};
 
 	public static readonly ATN _ATN =

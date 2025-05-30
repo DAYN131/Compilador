@@ -1,15 +1,12 @@
 grammar SiriusLanguage;
 
-
-
 // Parser rules
 program: (declaration | statement)* EOF;
 
 declaration: 
     importDeclaration
-    | variableDeclaration SEMICOLON  // Punto y coma obligatorio
-    | functionDeclaration
-    ;
+    | variableDeclaration SEMICOLON
+    | functionDeclaration;
 
 importDeclaration: IMPORT IDENTIFIER SEMICOLON;
 
@@ -20,67 +17,70 @@ functionDeclaration:
     FUN IDENTIFIER LPAREN parameterList? RPAREN (COLON type)? block;
 
 parameterList: parameter (COMMA parameter)*;
-parameter: IDENTIFIER COLON type;  // Tipo obligatorio en par谩metros
+parameter: IDENTIFIER COLON type;
 
 type: TYPE_INT | TYPE_STR | TYPE_BOOL;
 
 statement: 
-    printStatement SEMICOLON       // Punto y coma obligatorio
+    printStatement SEMICOLON
     | ifStatement
     | forStatement
     | whileStatement
-    | returnStatement SEMICOLON    // Punto y coma obligatorio
+    | returnStatement SEMICOLON
+    | variableDeclaration SEMICOLON
     | block
-    | expression SEMICOLON         // Punto y coma obligatorio
-    ;
+    | expression SEMICOLON;
 
 printStatement: (PRINT | PRINTLN) LPAREN expression RPAREN;
 
-ifStatement: 
-    IF LPAREN expression RPAREN block 
-    (ELSE IF LPAREN expression RPAREN block)* 
-    (ELSE block)?;
+ifStatement
+    : 'if' '(' expression ')' block ('else' 'if' '(' expression ')' block)* ('else' block)?;
 
 forStatement: 
     FOR LPAREN 
-    (variableDeclaration | expression)? SEMICOLON  // Inicializaci贸n
-    expression? SEMICOLON                          // Condici贸n
-    expression?                                    // Actualizaci贸n
+    (variableDeclaration | expression)? SEMICOLON
+    expression? SEMICOLON
+    expression?
     RPAREN block;
 
 whileStatement: WHILE LPAREN expression RPAREN block;
 
-returnStatement: RETURN expression?;  // Expresi贸n opcional
+returnStatement: RETURN expression?;
 
-block: LBRACE (statement)* RBRACE;
+block: LBRACE statement* RBRACE;
 
-expression: 
-    assignment
-    | logicOr
+// Jerarqu韆 de expresiones corregida
+expression
+    : logicOr
+    | assignment
     ;
-
-assignment: IDENTIFIER ASSIGN expression | logicOr;
 
 logicOr: logicAnd (OR logicAnd)*;
 logicAnd: equality (AND equality)*;
-equality: comparison ((EQUAL | NOTEQUAL) comparison)*;
-comparison: term ((LT | GT | LTEQ | GTEQ) term)*;
-term: factor ((PLUS | MINUS) factor)*;
-factor: unary ((MULTIPLY | DIVIDE) unary)*;
+equality: comparison ((EQUAL | NOTEQUAL) comparison)?;  // Operador opcional
+comparison: additive ((LT | GT | LTEQ | GTEQ) additive)?;
+additive: multiplicative ((PLUS | MINUS) multiplicative)*;
+multiplicative: unary ((MULTIPLY | DIVIDE) unary)*;
 unary: (NOT | MINUS)? primary;
 
 primary: 
     literal
     | IDENTIFIER
     | LPAREN expression RPAREN
-    | functionCall
-    ;
+    | functionCall;
+
+assignment: IDENTIFIER ASSIGN expression;
 
 functionCall: IDENTIFIER LPAREN (expression (COMMA expression)*)? RPAREN;
 
-literal: NUMBER | STRING | TRUE | FALSE;
+// Literales mejor estructurados
+literal: 
+    TRUE       #booleanLiteral
+    | FALSE    #booleanLiteral
+    | NUMBER   #numberLiteral
+    | STRING   #stringLiteral;
 
-// Lexer rules
+// Lexer rules (sin cambios)
 TRUE: 'true';
 FALSE: 'false';
 AND: 'and';
@@ -123,12 +123,8 @@ GT: '>';
 LTEQ: '<=';
 GTEQ: '>=';
 
-
-
 IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
-
 NUMBER: [0-9]+;
-
 STRING: '"' (~["\\\r\n] | '\\' .)* '"';
 
 COMMENT_LINE: '--' ~[\r\n]* -> skip;

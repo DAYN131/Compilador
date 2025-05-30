@@ -55,16 +55,19 @@
     <Compile Include="abrir.Designer.cs">
       <DependentUpon>abrir.cs</DependentUpon>
     </Compile>
+    <Compile Include="Generated\SiriusLanguageBaseListener.cs" />
+    <Compile Include="Generated\SiriusLanguageBaseVisitor.cs" />
+    <Compile Include="Generated\SiriusLanguageLexer.cs" />
+    <Compile Include="Generated\SiriusLanguageListener.cs" />
+    <Compile Include="Generated\SiriusLanguageParser.cs" />
+    <Compile Include="Generated\SiriusLanguageVisitor.cs" />
+    <Compile Include="SemanticAnalyzer.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Generated\SiriusLanguageBaseListener.cs" />
-    <Compile Include="Generated\SiriusLanguageLexer.cs" />
-    <Compile Include="Generated\SiriusLanguageListener.cs" />
-    <Compile Include="Generated\SiriusLanguageParser.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,11 +89,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include=".editorconfig" />
     <None Include="Generated\SiriusLanguage.interp" />
     <None Include="Generated\SiriusLanguage.tokens" />
     <None Include="Generated\SiriusLanguageLexer.interp" />
     <None Include="Generated\SiriusLanguageLexer.tokens" />
-    <None Include=".editorconfig" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -108,5 +111,6 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
