@@ -22,14 +22,20 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using static Compilador.SemanticAnalyzer;
 using static Compilador.Generated.SiriusLanguageParser;
 using System.Diagnostics;
+using Antlr4.Runtime.Tree.Xpath;
 
 
 
 
 namespace Compilador
 {
+    
     public partial class abrir : Form
     {
+        private Process cmdProcess; // Variable global en tu clase
+        private StreamWriter cmdInput;
+
+
         // Constructor y manejo de archivos
         public abrir(string contenido, string rutaArchivo)
         {
@@ -289,28 +295,6 @@ namespace Compilador
                 MessageBox.Show($"Error de sintaxis:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        //private void ArbolBtn_Click(object sender, EventArgs e)
-        //{
-        //    try
-        //    {
-        //        var parser = SetupAntlrParser();
-        //        var tree = parser.program();
-
-        //        treeView1.BeginUpdate();
-        //        treeView1.Nodes.Clear();
-        //        BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
-        //        treeView1.ExpandAll();
-        //        treeView1.EndUpdate();
-
-              
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //    }
-        //}
-
         private void BuildTreeView(IParseTree tree, TreeNode parentNode)
         {
             if (tree is TerminalNodeImpl terminal)
@@ -602,5 +586,109 @@ namespace Compilador
                               MessageBoxIcon.Error);
             }
         }
+
+        private void compilarToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 1. Configurar Parser
+                var parser = SetupAntlrParser();
+                parser.RemoveErrorListeners();
+                parser.AddErrorListener(new AntlrErrorListener());
+                var tree = parser.program();
+
+                // 2. Tokenizar
+                if (parser.InputStream is CommonTokenStream tokenStream)
+                {
+                    tokenStream.Fill();
+                    DisplayTokens(tokenStream);
+                    ColorizeTokensAntlr(tokenStream.GetTokens());
+                }
+
+                // 3. Construir árbol visual
+                treeView1.BeginUpdate();
+                treeView1.Nodes.Clear();
+                BuildTreeView(tree, treeView1.Nodes.Add("Programa"));
+                treeView1.ExpandAll();
+                treeView1.EndUpdate();
+
+                // 4. Análisis semántico
+                var analyzer = new SemanticAnalyzer();
+                analyzer.VisitProgram(tree);
+
+                if (analyzer.HasErrors())
+                {
+                    ShowSemanticErrors(analyzer.GetErrors());
+                    return; // No continuar si hay errores
+                }
+                else
+                {
+                    ShowSemanticSuccess();
+                }
+
+                // 5. Generar código intermedio
+                var codeGenerator = new ThreeAddressCodeGenerator(analyzer);
+                codeGenerator.VisitProgram(tree);
+                var intermediateCode = codeGenerator.GetGeneratedCode();
+
+                // 6. Compilar con Roslyn
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string exePath = Path.Combine(desktopPath, "output.exe");
+
+                var roslynCompiler = new RoslynCompiler();
+                bool success = roslynCompiler.CompileFromTAC(intermediateCode, exePath);
+
+                if (!success)
+                {
+                    MessageBox.Show("Error al compilar el código intermedio.", "Compilación Fallida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/K \"\"{exePath}\" && pause\"",
+                    UseShellExecute = true
+                };
+
+                cmdProcess = Process.Start(startInfo);
+
+
+                // 9. Restaurar la ventana principal si estaba minimizada
+                this.WindowState = FormWindowState.Minimized;
+                this.WindowState = FormWindowState.Normal;
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ocurrió un error inesperado:\n{ex.Message}", "Error General", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void detenerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (cmdProcess != null && !cmdProcess.HasExited)
+            {
+                try
+                {
+                    cmdInput.WriteLine("exit"); // Cierra cmd de forma limpia
+                    cmdProcess.WaitForExit();  // Espera a que finalice
+                    cmdInput.Dispose();
+                    cmdProcess.Dispose();
+                    cmdInput = null;
+                    cmdProcess = null;
+                    MessageBox.Show("Consola detenida correctamente.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al cerrar cmd: " + ex.Message);
+                }
+            }
+            else
+            {
+                MessageBox.Show("No hay consola en ejecución.");
+            }
+        }
+
     }
 }

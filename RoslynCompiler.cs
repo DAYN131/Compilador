@@ -193,40 +193,85 @@ namespace Compilador
 
             return code.ToString();
         }
-
-        // NUEVO MÉTODO: Extraer variables directamente del TAC
         private void ExtractVariablesFromTacLine(string line, HashSet<string> variables,
-            HashSet<string> booleanVariables, HashSet<string> stringVariables)
+    HashSet<string> booleanVariables, HashSet<string> stringVariables)
+{
+    line = line.Split(new[] { '#' }, 2)[0].Trim();
+    if (string.IsNullOrEmpty(line)) return;
+
+    // Manejar asignaciones
+    if (line.Contains("=") && !line.Contains("==") && !line.Contains("!="))
+    {
+        var parts = line.Split('=');
+        if (parts.Length == 2)
         {
-            line = line.Split(new[] { '#' }, 2)[0].Trim();
-            if (string.IsNullOrEmpty(line)) return;
+            string left = parts[0].Trim();
+            string right = parts[1].Trim();
 
-            // Solo procesar líneas de asignación
-            int assignIndex = FindAssignmentOperator(line);
-            if (assignIndex > 0)
+            if (IsValidVariableName(left))
             {
-                string left = line.Substring(0, assignIndex).Trim();
-                string right = line.Substring(assignIndex + 1).Trim();
+                variables.Add(left);
 
-                // Agregar la variable del lado izquierdo
-                if (IsValidVariableName(left))
+                // Determinar el tipo
+                if (right == "true" || right == "false" || 
+                    ContainsBooleanOperator(right) ||
+                    booleanVariables.Contains(right.Split(' ')[0]) ||
+                    right.StartsWith("NOT ") ||
+                    (booleanVariables.Contains(left) && right.Contains("=")))
                 {
-                    variables.Add(left);
+                    booleanVariables.Add(left);
+                }
+                else if (IsStringExpression(right))
+                {
+                    stringVariables.Add(left);
+                }
+            }
 
-                    // Determinar el tipo
-                    if (IsBooleanExpression(right) || IsComparisonExpression(right))
+            // Extraer variables del lado derecho
+            ExtractVariablesFromExpression(right, variables, booleanVariables);
+        }
+    }
+}
+
+private void ExtractVariablesFromExpression(string expression, HashSet<string> variables, 
+    HashSet<string> booleanVariables)
+{
+    // Tokenizar la expresión
+    var tokens = expression.Split(new char[] {
+        ' ', '+', '-', '*', '/', '<', '>', '=', '!', '(', ')', '&', '|', ',', ';'
+    }, StringSplitOptions.RemoveEmptyEntries);
+
+    foreach (var token in tokens)
+    {
+        string cleanToken = token.Trim();
+        if (IsValidVariableName(cleanToken) && !IsNumericLiteral(cleanToken) && !IsKeyword(cleanToken))
+        {
+            variables.Add(cleanToken);
+            
+            // Propagación de tipos booleanos
+            if (booleanVariables.Contains(cleanToken))
+            {
+                // Marcar todas las variables en expresiones booleanas
+                if (ContainsBooleanOperator(expression))
+                {
+                    foreach (var varName in variables)
                     {
-                        booleanVariables.Add(left);
-                    }
-                    else if (IsStringExpression(right))
-                    {
-                        stringVariables.Add(left);
+                        if (expression.Contains(varName))
+                        {
+                            booleanVariables.Add(varName);
+                        }
                     }
                 }
-
-                // Extraer variables del lado derecho
-                ExtractVariablesFromExpression(right, variables);
             }
+        }
+    }
+}
+
+        private bool ContainsBooleanOperator(string expression)
+        {
+            return expression.Contains(" AND ") ||
+                   expression.Contains(" OR ") ||
+                   expression.Contains(" NOT ");
         }
 
         private string ConvertTacLineToCSharp(string line, HashSet<string> labels, HashSet<string> booleanVariables, HashSet<string> stringVariables)
@@ -256,8 +301,9 @@ namespace Compilador
                 if (parts.Length >= 2)
                 {
                     string cond = parts[0].Replace("IF_FALSE", "").Trim();
+                    cond = ConvertBooleanExpression(cond);
                     string label = parts[1].Trim();
-                    return $"if (!{cond}) goto {label};";
+                    return $"if (!({cond})) goto {label};";
                 }
             }
 
@@ -276,10 +322,8 @@ namespace Compilador
                 string left = line.Substring(0, assignIndex).Trim();
                 string right = line.Substring(assignIndex + 1).Trim();
 
-                // Manejar operaciones
-                right = right.Replace("AND", "&&")
-                             .Replace("OR", "||")
-                             .Replace("NOT", "!");
+                // Convertir operadores booleanos
+                right = ConvertBooleanExpression(right);
 
                 return $"{left} = {right};";
             }
@@ -289,12 +333,38 @@ namespace Compilador
             {
                 if (line.Length > "RETURN".Length)
                 {
-                    return $"return {line.Substring("RETURN".Length).Trim()};";
+                    string returnValue = line.Substring("RETURN".Length).Trim();
+                    returnValue = ConvertBooleanExpression(returnValue);
+                    return $"return {returnValue};";
                 }
                 return "return;";
             }
 
             return "";
+        }
+
+        private string ConvertBooleanExpression(string expression)
+        {
+            // Primero manejar NOT
+            expression = expression.Replace("NOT ", "!(");
+
+            // Manejar paréntesis para NOT
+            if (expression.Contains("!("))
+            {
+                // Encontrar el cierre del NOT
+                int openIndex = expression.IndexOf("!(");
+                int closeIndex = expression.IndexOf(")", openIndex);
+                if (closeIndex == -1) closeIndex = expression.Length - 1;
+
+                // Agregar paréntesis de cierre
+                expression = expression.Insert(closeIndex + 1, ")");
+            }
+
+            // Luego manejar AND y OR
+            expression = expression.Replace(" AND ", " && ");
+            expression = expression.Replace(" OR ", " || ");
+
+            return expression;
         }
 
         private int FindAssignmentOperator(string line)
