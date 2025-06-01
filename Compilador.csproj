@@ -93,6 +93,7 @@
     <Compile Include="Generated\SiriusLanguageListener.cs" />
     <Compile Include="Generated\SiriusLanguageParser.cs" />
     <Compile Include="Generated\SiriusLanguageVisitor.cs" />
+    <Compile Include="OptimizationAdvisor.cs" />
     <Compile Include="RoslynCompiler.cs" />
     <Compile Include="SemanticAnalyzer.cs" />
     <Compile Include="Form1.cs">

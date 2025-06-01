@@ -23,6 +23,7 @@ using static Compilador.SemanticAnalyzer;
 using static Compilador.Generated.SiriusLanguageParser;
 using System.Diagnostics;
 using Antlr4.Runtime.Tree.Xpath;
+using Microsoft.CodeAnalysis.CSharp;
 
 
 
@@ -619,7 +620,7 @@ namespace Compilador
                 if (analyzer.HasErrors())
                 {
                     ShowSemanticErrors(analyzer.GetErrors());
-                    return; // No continuar si hay errores
+                    return;
                 }
                 else
                 {
@@ -630,6 +631,16 @@ namespace Compilador
                 var codeGenerator = new ThreeAddressCodeGenerator(analyzer);
                 codeGenerator.VisitProgram(tree);
                 var intermediateCode = codeGenerator.GetGeneratedCode();
+
+                // Consejos de optimización
+                var optimizer = new SimpleTACOptimizer();
+                var advice = optimizer.AnalyzeCode(intermediateCode);
+
+                if (advice.Any())
+                {
+                    var adviceText = "Consejos de optimización:\n" + string.Join("\n", advice);
+                    MessageBox.Show(adviceText, "Optimización", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
 
                 // 6. Compilar con Roslyn
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -644,6 +655,16 @@ namespace Compilador
                     return;
                 }
 
+                // 7. Reutilizar consola si ya está abierta
+                if (cmdProcess != null && !cmdProcess.HasExited)
+                {
+                    cmdProcess.Kill();
+                    cmdProcess.WaitForExit();
+                    cmdProcess.Dispose();
+                    cmdProcess = null;
+                }
+
+                // 8. Iniciar nueva consola con ejecución de output.exe
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
@@ -653,35 +674,31 @@ namespace Compilador
 
                 cmdProcess = Process.Start(startInfo);
 
-
-                // 9. Restaurar la ventana principal si estaba minimizada
+                // 9. Restaurar ventana si estaba minimizada
                 this.WindowState = FormWindowState.Minimized;
                 this.WindowState = FormWindowState.Normal;
-
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ocurrió un error inesperado:\n{ex.Message}", "Error General", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void detenerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (cmdProcess != null && !cmdProcess.HasExited)
             {
                 try
                 {
-                    cmdInput.WriteLine("exit"); // Cierra cmd de forma limpia
-                    cmdProcess.WaitForExit();  // Espera a que finalice
-                    cmdInput.Dispose();
-                    cmdProcess.Dispose();
-                    cmdInput = null;
+                    cmdProcess.Kill();           // Mata el proceso cmd
+                    cmdProcess.WaitForExit();    // Espera que termine
+                    cmdProcess.Dispose();        // Libera recursos
                     cmdProcess = null;
+
                     MessageBox.Show("Consola detenida correctamente.");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error al cerrar cmd: " + ex.Message);
+                    MessageBox.Show("Error al cerrar la consola:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -689,6 +706,5 @@ namespace Compilador
                 MessageBox.Show("No hay consola en ejecución.");
             }
         }
-
     }
 }
