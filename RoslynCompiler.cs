@@ -1,13 +1,12 @@
 ﻿using System;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using Antlr4.Runtime.Tree;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 
 namespace Compilador
 {
@@ -17,17 +16,12 @@ namespace Compilador
         {
             try
             {
-                // 1. Convertir TAC a C#
                 string csharpCode = ConvertTacToCSharp(tacCode);
                 SemanticAnalyzer.DebugLogger.Log("Generated C# code:\n" + csharpCode);
 
-                // 2. Configurar sintaxis
                 SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(csharpCode);
-
-                // 3. Configurar referencias
                 var references = GetRequiredReferences();
 
-                // 4. Configurar compilación
                 CSharpCompilation compilation = CSharpCompilation.Create(
                     Path.GetFileNameWithoutExtension(outputPath),
                     new[] { syntaxTree },
@@ -38,7 +32,6 @@ namespace Compilador
                         platform: Platform.AnyCpu)
                 );
 
-                // 5. Emitir ejecutable
                 EmitResult result = compilation.Emit(outputPath);
 
                 if (!result.Success)
@@ -64,13 +57,10 @@ namespace Compilador
         private List<MetadataReference> GetRequiredReferences()
         {
             var references = new List<MetadataReference>();
-
-            // Ensamblados básicos
             references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
             references.Add(MetadataReference.CreateFromFile(typeof(Console).Assembly.Location));
             references.Add(MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location));
 
-            // Ensamblados del runtime
             var runtimePath = RuntimeEnvironment.GetRuntimeDirectory();
             references.Add(MetadataReference.CreateFromFile(Path.Combine(runtimePath, "System.Runtime.dll")));
             references.Add(MetadataReference.CreateFromFile(Path.Combine(runtimePath, "mscorlib.dll")));
@@ -79,7 +69,6 @@ namespace Compilador
             return references;
         }
 
-        // MÉTODO PRINCIPAL CORREGIDO
         private string ConvertTacToCSharp(List<string> tacCode)
         {
             var code = new StringBuilder();
@@ -89,19 +78,19 @@ namespace Compilador
             code.AppendLine("    public static class Program");
             code.AppendLine("    {");
 
-            // Procesar funciones y main
             var functions = new Dictionary<string, StringBuilder>();
             string currentFunction = "Main";
             functions[currentFunction] = new StringBuilder();
             functions[currentFunction].AppendLine("        public static void Main(string[] args)");
             functions[currentFunction].AppendLine("        {");
 
-            // Variables para rastrear las variables usadas, labels y tipos
-            var variables = new HashSet<string>();
+            var variables = new Dictionary<string, VariableInfo>();
             var labels = new HashSet<string>();
-            var booleanVariables = new HashSet<string>();
-            var stringVariables = new HashSet<string>();
 
+            // Primera pasada: recolectar información de tipos
+            AnalyzeVariableTypesMultiPass(tacCode, variables);
+
+            // Segunda pasada: generar código
             foreach (string line in tacCode)
             {
                 if (string.IsNullOrWhiteSpace(line)) continue;
@@ -121,68 +110,14 @@ namespace Compilador
                 }
                 else
                 {
-                    // PRIMERO: Extraer variables directamente del TAC
-                    ExtractVariablesFromTacLine(line, variables, booleanVariables, stringVariables);
-
-                    // SEGUNDO: Convertir la línea
-                    string csharpLine = ConvertTacLineToCSharp(line, labels, booleanVariables, stringVariables);
-                    if (!string.IsNullOrEmpty(csharpLine))
-                    {
-                        functions[currentFunction].AppendLine($"            {csharpLine}");
-                    }
+                    ProcessTacLine(line, variables, labels, functions[currentFunction]);
                 }
             }
 
-            // Insertar declaraciones de variables al inicio de cada función
-            foreach (var funcName in functions.Keys.ToList())
-            {
-                var funcContent = functions[funcName].ToString();
-                var lines = funcContent.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-
-                // Encontrar la línea que contiene el {
-                int openingBraceIndex = Array.FindIndex(lines, l => l.Contains("{"));
-
-                if (openingBraceIndex >= 0)
-                {
-                    // Insertar declaraciones de variables después del {
-                    var newLines = lines.Take(openingBraceIndex + 1).ToList();
-
-                    // Filtrar variables válidas
-                    var validVariables = variables.Where(v =>
-                        !labels.Contains(v) &&
-                        !IsKeyword(v) &&
-                        !v.Equals("Console") &&
-                        !v.Equals("WriteLine") &&
-                        !v.Equals("Write") &&
-                        !v.Equals("args") &&
-                        IsValidVariableName(v))
-                        .OrderBy(v => v);
-
-                    // Declarar variables con el tipo correcto
-                    foreach (var varName in validVariables)
-                    {
-                        if (booleanVariables.Contains(varName))
-                        {
-                            newLines.Add($"            bool {varName};");
-                        }
-                        else if (stringVariables.Contains(varName))
-                        {
-                            newLines.Add($"            string {varName};");
-                        }
-                        else
-                        {
-                            newLines.Add($"            int {varName};");
-                        }
-                    }
-
-                    newLines.AddRange(lines.Skip(openingBraceIndex + 1));
-                    functions[funcName] = new StringBuilder(string.Join(Environment.NewLine, newLines));
-                }
-            }
+            InsertVariableDeclarations(functions, variables);
 
             functions["Main"].AppendLine("        }");
 
-            // Agregar todas las funciones al código
             foreach (var func in functions.Values)
             {
                 code.AppendLine(func.ToString());
@@ -193,178 +128,344 @@ namespace Compilador
 
             return code.ToString();
         }
-        private void ExtractVariablesFromTacLine(string line, HashSet<string> variables,
-    HashSet<string> booleanVariables, HashSet<string> stringVariables)
-{
-    line = line.Split(new[] { '#' }, 2)[0].Trim();
-    if (string.IsNullOrEmpty(line)) return;
 
-    // Manejar asignaciones
-    if (line.Contains("=") && !line.Contains("==") && !line.Contains("!="))
-    {
-        var parts = line.Split('=');
-        if (parts.Length == 2)
+        private void AnalyzeVariableTypesMultiPass(List<string> tacCode, Dictionary<string, VariableInfo> variables)
         {
-            string left = parts[0].Trim();
-            string right = parts[1].Trim();
+            // Múltiples pasadas para resolver tipos correctamente
+            bool typesChanged;
+            int maxPasses = 10; // Evitar bucles infinitos
+            int currentPass = 0;
 
-            if (IsValidVariableName(left))
+            do
             {
-                variables.Add(left);
+                typesChanged = false;
+                currentPass++;
 
-                // Determinar el tipo
-                if (right == "true" || right == "false" || 
-                    ContainsBooleanOperator(right) ||
-                    booleanVariables.Contains(right.Split(' ')[0]) ||
-                    right.StartsWith("NOT ") ||
-                    (booleanVariables.Contains(left) && right.Contains("=")))
+                foreach (string line in tacCode)
                 {
-                    booleanVariables.Add(left);
-                }
-                else if (IsStringExpression(right))
-                {
-                    stringVariables.Add(left);
-                }
-            }
+                    if (string.IsNullOrWhiteSpace(line)) continue;
 
-            // Extraer variables del lado derecho
-            ExtractVariablesFromExpression(right, variables, booleanVariables);
-        }
-    }
-}
-
-private void ExtractVariablesFromExpression(string expression, HashSet<string> variables, 
-    HashSet<string> booleanVariables)
-{
-    // Tokenizar la expresión
-    var tokens = expression.Split(new char[] {
-        ' ', '+', '-', '*', '/', '<', '>', '=', '!', '(', ')', '&', '|', ',', ';'
-    }, StringSplitOptions.RemoveEmptyEntries);
-
-    foreach (var token in tokens)
-    {
-        string cleanToken = token.Trim();
-        if (IsValidVariableName(cleanToken) && !IsNumericLiteral(cleanToken) && !IsKeyword(cleanToken))
-        {
-            variables.Add(cleanToken);
-            
-            // Propagación de tipos booleanos
-            if (booleanVariables.Contains(cleanToken))
-            {
-                // Marcar todas las variables en expresiones booleanas
-                if (ContainsBooleanOperator(expression))
-                {
-                    foreach (var varName in variables)
+                    if (AnalyzeVariableTypes(line, variables))
                     {
-                        if (expression.Contains(varName))
-                        {
-                            booleanVariables.Add(varName);
-                        }
+                        typesChanged = true;
                     }
                 }
+            } while (typesChanged && currentPass < maxPasses);
+
+            // Establecer tipo por defecto para variables sin tipo determinado
+            foreach (var variable in variables.Values)
+            {
+                if (string.IsNullOrEmpty(variable.Type))
+                {
+                    variable.Type = "int"; // Tipo por defecto
+                }
             }
         }
-    }
-}
 
-        private bool ContainsBooleanOperator(string expression)
+        private bool AnalyzeVariableTypes(string line, Dictionary<string, VariableInfo> variables)
         {
-            return expression.Contains(" AND ") ||
-                   expression.Contains(" OR ") ||
-                   expression.Contains(" NOT ");
+            line = line.Split('#')[0].Trim();
+            if (string.IsNullOrEmpty(line)) return false;
+
+            bool typeChanged = false;
+            int assignIndex = FindAssignmentOperator(line);
+
+            if (assignIndex > 0)
+            {
+                string left = line.Substring(0, assignIndex).Trim();
+                string right = line.Substring(assignIndex + 1).Trim();
+
+                // Crear variable si no existe
+                if (!variables.ContainsKey(left))
+                {
+                    variables[left] = new VariableInfo { Name = left };
+                }
+
+                string inferredType = InferTypeFromExpression(right, variables);
+
+                // Solo actualizar si el tipo cambió o no estaba establecido
+                if (string.IsNullOrEmpty(variables[left].Type) || variables[left].Type != inferredType)
+                {
+                    variables[left].Type = inferredType;
+                    typeChanged = true;
+                }
+            }
+
+            return typeChanged;
         }
 
-        private string ConvertTacLineToCSharp(string line, HashSet<string> labels, HashSet<string> booleanVariables, HashSet<string> stringVariables)
+        private string InferTypeFromExpression(string expression, Dictionary<string, VariableInfo> variables)
         {
-            line = line.Split(new[] { '#' }, 2)[0].Trim();
-            if (string.IsNullOrEmpty(line)) return string.Empty;
+            expression = expression.Trim();
 
-            // Manejar labels
+            // Literal de cadena
+            if (IsStringLiteral(expression))
+            {
+                return "string";
+            }
+
+            // Literal booleano
+            if (expression == "true" || expression == "false")
+            {
+                return "bool";
+            }
+
+            // Literal numérico entero
+            if (int.TryParse(expression, out _))
+            {
+                return "int";
+            }
+
+            // Literal numérico decimal
+            if (double.TryParse(expression, out _) && expression.Contains("."))
+            {
+                return "double";
+            }
+
+            // Variable simple (asignación directa)
+            if (variables.ContainsKey(expression) && !string.IsNullOrEmpty(variables[expression].Type))
+            {
+                return variables[expression].Type;
+            }
+
+            // CORRECCIÓN: Normalizar la expresión para el análisis
+            string normalizedExpression = expression
+                .Replace("AND", "&&")
+                .Replace("OR", "||")
+                .Replace("NOT", "!");
+
+            // Verificar expresiones booleanas ANTES que aritméticas
+            if (IsBooleanExpression(normalizedExpression))
+            {
+                return "bool";
+            }
+
+            // Expresión aritmética (a + b, a - b, etc.)
+            if (IsArithmeticExpression(normalizedExpression))
+            {
+                var operands = ExtractOperandsFromArithmetic(normalizedExpression);
+
+                // Si todos los operandos son int, el resultado es int
+                bool allInt = true;
+                bool hasDouble = false;
+                bool hasString = false;
+
+                foreach (var operand in operands)
+                {
+                    string operandType = InferTypeFromSingleOperand(operand, variables);
+                    if (operandType == "string")
+                    {
+                        hasString = true;
+                        break;
+                    }
+                    else if (operandType == "double")
+                    {
+                        hasDouble = true;
+                        allInt = false;
+                    }
+                    else if (operandType != "int")
+                    {
+                        allInt = false;
+                    }
+                }
+
+                if (hasString) return "string"; // Concatenación
+                if (hasDouble) return "double";
+                if (allInt) return "int";
+            }
+
+            // Por defecto, asumir int si no se puede determinar
+            return "int";
+        }
+
+        private string InferTypeFromSingleOperand(string operand, Dictionary<string, VariableInfo> variables)
+        {
+            operand = operand.Trim();
+
+            if (IsStringLiteral(operand)) return "string";
+            if (operand == "true" || operand == "false") return "bool";
+            if (int.TryParse(operand, out _)) return "int";
+            if (double.TryParse(operand, out _) && operand.Contains(".")) return "double";
+
+            if (variables.ContainsKey(operand) && !string.IsNullOrEmpty(variables[operand].Type))
+            {
+                return variables[operand].Type;
+            }
+
+            return "int"; // Por defecto
+        }
+
+        private bool IsArithmeticExpression(string expression)
+        {
+            return expression.Contains("+") || expression.Contains("-") ||
+                   expression.Contains("*") || expression.Contains("/") ||
+                   expression.Contains("%");
+        }
+
+        private List<string> ExtractOperandsFromArithmetic(string expression)
+        {
+            var operands = new List<string>();
+            var operators = new[] { "+", "-", "*", "/", "%" };
+
+            string[] parts = expression.Split(operators, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                string operand = part.Trim();
+                if (!string.IsNullOrEmpty(operand))
+                {
+                    operands.Add(operand);
+                }
+            }
+
+            return operands;
+        }
+
+        private void ProcessTacLine(string line, Dictionary<string, VariableInfo> variables,
+                                  HashSet<string> labels, StringBuilder functionBuilder)
+        {
+            line = line.Split('#')[0].Trim();
+            if (string.IsNullOrEmpty(line)) return;
+
             if (line.EndsWith(":"))
             {
                 string labelName = line.TrimEnd(':');
                 labels.Add(labelName);
-                return line + " ;";
+                functionBuilder.AppendLine($"            {line};");
+                return;
             }
 
-            // Manejar GOTO
             if (line.StartsWith("GOTO"))
             {
                 string label = line.Substring("GOTO".Length).Trim();
-                return $"goto {label};";
+                functionBuilder.AppendLine($"            goto {label};");
+                return;
             }
 
-            // Manejar IF_FALSE
             if (line.StartsWith("IF_FALSE"))
             {
                 var parts = line.Split(new[] { "GOTO" }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length >= 2)
                 {
                     string cond = parts[0].Replace("IF_FALSE", "").Trim();
-                    cond = ConvertBooleanExpression(cond);
                     string label = parts[1].Trim();
-                    return $"if (!({cond})) goto {label};";
+                    functionBuilder.AppendLine($"            if (!{cond}) goto {label};");
                 }
+                return;
             }
 
-            // Manejar prints
             if (line.StartsWith("print ") || line.StartsWith("println "))
             {
                 bool isPrintLn = line.StartsWith("println ");
                 string content = line.Substring(isPrintLn ? "println ".Length : "print ".Length).Trim();
-                return $"Console.{(isPrintLn ? "WriteLine" : "Write")}({content});";
+                functionBuilder.AppendLine($"            Console.{(isPrintLn ? "WriteLine" : "Write")}({content});");
+                return;
             }
 
-            // Manejar asignaciones
             int assignIndex = FindAssignmentOperator(line);
             if (assignIndex > 0)
             {
                 string left = line.Substring(0, assignIndex).Trim();
                 string right = line.Substring(assignIndex + 1).Trim();
 
-                // Convertir operadores booleanos
-                right = ConvertBooleanExpression(right);
+                right = right.Replace("AND", "&&")
+                             .Replace("OR", "||")
+                             .Replace("NOT", "!");
 
-                return $"{left} = {right};";
+                functionBuilder.AppendLine($"            {left} = {right};");
+                return;
             }
 
-            // Manejar RETURN
             if (line.StartsWith("RETURN"))
             {
                 if (line.Length > "RETURN".Length)
                 {
-                    string returnValue = line.Substring("RETURN".Length).Trim();
-                    returnValue = ConvertBooleanExpression(returnValue);
-                    return $"return {returnValue};";
+                    functionBuilder.AppendLine($"            return {line.Substring("RETURN".Length).Trim()};");
                 }
-                return "return;";
+                else
+                {
+                    functionBuilder.AppendLine("            return;");
+                }
             }
-
-            return "";
         }
 
-        private string ConvertBooleanExpression(string expression)
+        private void InsertVariableDeclarations(Dictionary<string, StringBuilder> functions,
+                                              Dictionary<string, VariableInfo> variables)
         {
-            // Primero manejar NOT
-            expression = expression.Replace("NOT ", "!(");
-
-            // Manejar paréntesis para NOT
-            if (expression.Contains("!("))
+            foreach (var funcName in functions.Keys.ToList())
             {
-                // Encontrar el cierre del NOT
-                int openIndex = expression.IndexOf("!(");
-                int closeIndex = expression.IndexOf(")", openIndex);
-                if (closeIndex == -1) closeIndex = expression.Length - 1;
+                var funcContent = functions[funcName].ToString();
+                var lines = funcContent.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                int openingBraceIndex = Array.FindIndex(lines, l => l.Contains("{"));
 
-                // Agregar paréntesis de cierre
-                expression = expression.Insert(closeIndex + 1, ")");
+                if (openingBraceIndex >= 0)
+                {
+                    var newLines = lines.Take(openingBraceIndex + 1).ToList();
+
+                    // Agrupar variables por tipo y ordenar para tener un output consistente
+                    var varsByType = variables.Values
+                        .Where(v => !IsKeyword(v.Name))
+                        .GroupBy(v => v.Type ?? "int")
+                        .OrderBy(g => GetTypePriority(g.Key)); // Ordenar tipos: string, bool, int, double
+
+                    foreach (var group in varsByType)
+                    {
+                        string typeName = group.Key;
+                        var varNames = group.Select(v => v.Name).OrderBy(n => n);
+                        newLines.Add($"            {typeName} {string.Join(", ", varNames)};");
+                    }
+
+                    newLines.AddRange(lines.Skip(openingBraceIndex + 1));
+                    functions[funcName] = new StringBuilder(string.Join(Environment.NewLine, newLines));
+                }
             }
+        }
 
-            // Luego manejar AND y OR
-            expression = expression.Replace(" AND ", " && ");
-            expression = expression.Replace(" OR ", " || ");
+        private int GetTypePriority(string type)
+        {
+            switch (type)
+            {
+                case "string": return 1;
+                case "bool": return 2;
+                case "int": return 3;
+                case "double": return 4;
+                default: return 5;
+            }
+        }
 
-            return expression;
+        private bool IsStringLiteral(string expression)
+        {
+            return expression.StartsWith("\"") && expression.EndsWith("\"");
+        }
+
+        private bool IsBooleanExpression(string expression)
+        {
+            expression = expression.Trim();
+
+            // Verificar si es un literal booleano
+            if (expression == "true" || expression == "false")
+                return true;
+
+            // Verificar operadores lógicos (&&, ||, !) - incluyendo versiones TAC
+            if (expression.Contains("&&") || expression.Contains("||") ||
+                expression.Contains("AND") || expression.Contains("OR"))
+                return true;
+
+            // Verificar operadores de comparación
+            if (expression.Contains("==") || expression.Contains("!=") ||
+                expression.Contains("<=") || expression.Contains(">=") ||
+                expression.Contains("<") || expression.Contains(">"))
+                return true;
+
+            // Verificar operador NOT al inicio (tanto ! como NOT)
+            if (expression.StartsWith("!") || expression.StartsWith("NOT "))
+                return true;
+
+            return false;
+        }
+
+        private bool IsNumericExpression(string expression)
+        {
+            return expression.Any(char.IsDigit) && !IsStringLiteral(expression) && !IsBooleanExpression(expression);
         }
 
         private int FindAssignmentOperator(string line)
@@ -373,100 +474,12 @@ private void ExtractVariablesFromExpression(string expression, HashSet<string> v
             {
                 if (line[i] == '=')
                 {
-                    // Verificar que no sea parte de == o !=
-                    bool isPartOfComparison = false;
-
-                    // Verificar si hay otro = después
-                    if (i + 1 < line.Length && line[i + 1] == '=')
-                    {
-                        isPartOfComparison = true;
-                    }
-
-                    // Verificar si hay ! antes
-                    if (i > 0 && line[i - 1] == '!')
-                    {
-                        isPartOfComparison = true;
-                    }
-
-                    // Verificar si hay < antes
-                    if (i > 0 && line[i - 1] == '<')
-                    {
-                        isPartOfComparison = true;
-                    }
-
-                    // Verificar si hay > antes
-                    if (i > 0 && line[i - 1] == '>')
-                    {
-                        isPartOfComparison = true;
-                    }
-
-                    // Si no es parte de una comparación, este es nuestro operador de asignación
-                    if (!isPartOfComparison)
-                    {
-                        return i;
-                    }
+                    bool isComparison = (i > 0 && (line[i - 1] == '!' || line[i - 1] == '<' || line[i - 1] == '>')) ||
+                                      (i < line.Length - 1 && line[i + 1] == '=');
+                    if (!isComparison) return i;
                 }
             }
             return -1;
-        }
-
-        private bool IsComparisonExpression(string expression)
-        {
-            var comparisonOperators = new[] { "<", ">", "<=", ">=", "==", "!=" };
-            return comparisonOperators.Any(op => expression.Contains(op));
-        }
-
-        private bool IsBooleanExpression(string expression)
-        {
-            expression = expression.Trim();
-            return expression == "true" || expression == "false" || IsComparisonExpression(expression);
-        }
-
-        private bool IsStringExpression(string expression)
-        {
-            expression = expression.Trim();
-            return expression.StartsWith("\"") && expression.EndsWith("\"");
-        }
-
-        // MÉTODO ACTUALIZADO: No se usa más para extraer del C#, pero se mantiene para compatibilidad
-        private void ExtractVariables(string line, HashSet<string> variables)
-        {
-            // Este método ya no se usa en el flujo principal
-            // Se mantiene por compatibilidad
-        }
-
-        private void ExtractVariablesFromExpression(string expression, HashSet<string> variables)
-        {
-            // Tokenizar la expresión
-            var tokens = expression.Split(new char[] {
-                ' ', '+', '-', '*', '/', '<', '>', '=', '!', '(', ')', '&', '|', ',', ';'
-            }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var token in tokens)
-            {
-                string cleanToken = token.Trim();
-                if (IsValidVariableName(cleanToken) && !IsNumericLiteral(cleanToken))
-                {
-                    variables.Add(cleanToken);
-                }
-            }
-        }
-
-        private bool IsValidVariableName(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return false;
-            if (IsKeyword(name)) return false;
-            if (IsNumericLiteral(name)) return false;
-
-            // Debe comenzar con letra o _ y contener solo letras, números y _
-            if (!char.IsLetter(name[0]) && name[0] != '_') return false;
-
-            return name.All(c => char.IsLetterOrDigit(c) || c == '_');
-        }
-
-        private bool IsNumericLiteral(string token)
-        {
-            return int.TryParse(token, out _) || double.TryParse(token, out _);
         }
 
         private bool IsKeyword(string token)
@@ -477,6 +490,12 @@ private void ExtractVariablesFromExpression(string expression, HashSet<string> v
                 "int", "string", "bool", "void", "public", "static", "class"
             };
             return keywords.Contains(token);
+        }
+
+        private class VariableInfo
+        {
+            public string Name { get; set; }
+            public string Type { get; set; }
         }
     }
 }
